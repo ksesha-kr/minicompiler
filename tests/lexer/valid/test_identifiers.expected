@@ -1,0 +1,6 @@
+1:1 IDENTIFIER "counter"
+2:1 IDENTIFIER "_counter"
+3:1 IDENTIFIER "counter123"
+4:1 IDENTIFIER "a"
+5:1 IDENTIFIER "longIdentifierWithManyCharactersAndNumbers1234567890"
+6:1 END_OF_FILE ""

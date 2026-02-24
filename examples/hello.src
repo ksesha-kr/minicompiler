@@ -1,0 +1,12 @@
+fn main() {
+    int counter = 42;
+    float pi = 3.14159;
+    bool flag = true;
+    string message = "Hello, World!";
+
+    if (counter > 0) {
+        return counter;
+    } else {
+        return 0;
+    }
+}
