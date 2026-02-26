@@ -67,7 +67,9 @@ class Scanner:
         elif c == '+':
             self._add_token(TokenType.OP_PLUS)
         elif c == '-':
-            if self._peek().isdigit():
+            if self._match('>'):
+                self._add_token(TokenType.OP_ARROW)
+            elif self._peek().isdigit():
                 self._scan_negative_number()
             else:
                 self._add_token(TokenType.OP_MINUS)
@@ -91,7 +93,8 @@ class Scanner:
             self._add_token(TokenType.SEMICOLON)
         elif c == ',':
             self._add_token(TokenType.COMMA)
-
+        elif c == ':':
+            self._add_token(TokenType.COLON)
         elif c == '.':
             self._add_token(TokenType.DOT)
 
@@ -278,6 +281,11 @@ class Scanner:
                 break
             if c == '"':
                 break
+            if c == '\\':
+                self._advance()
+                if not self._is_at_end():
+                    self._advance()
+                continue
             self._advance()
 
         if self._is_at_end() or self._peek() == '\n':
