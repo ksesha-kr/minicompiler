@@ -72,20 +72,6 @@ python tests/test_runner.py
 python tests/test_runner.py --create-expected
 ```
 
-### Ожидаемая структура тестов
-
-Проект включает следующие тесты:
-
-**Валидные тесты** (`tests/lexer/valid/`):
-- `test_identifiers.src` - проверка идентификаторов
-- `test_keywords.src` - проверка ключевых слов
-- `test_numbers.src` - проверка числовых литералов
-- `test_operators.src` - проверка операторов
-- `test_comments.src` - проверка комментариев
-
-**Невалидные тесты** (`tests/lexer/invalid/`):
-- `test_errors.src` - тест с разными ошибками 
-
 ## Формат вывода токенов
 
 Каждый токен выводится в формате:
