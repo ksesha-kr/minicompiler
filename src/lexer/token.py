@@ -37,7 +37,9 @@ class TokenType(Enum):
     OP_AND = auto()
     OP_OR = auto()
     OP_NOT = auto()
+    OP_ARROW = auto()
 
+    # Delimiters
     LPAREN = auto()
     RPAREN = auto()
     LBRACE = auto()
@@ -47,7 +49,9 @@ class TokenType(Enum):
     SEMICOLON = auto()
     COMMA = auto()
     DOT = auto()
+    COLON = auto()
 
+    # Special
     ERROR = auto()
     END_OF_FILE = auto()
 
@@ -71,7 +75,15 @@ class Token:
             return f"{self.line}:{self.column} {self.token_type.name} \"{self.lexeme}\" {self.value}"
 
         if self.token_type == TokenType.STRING_LITERAL:
-            return f"{self.line}:{self.column} {self.token_type.name} \"{self.lexeme}\" \"{self.value}\""
+            escaped_lexeme = ''
+            i = 0
+            while i < len(self.lexeme):
+                if self.lexeme[i] == '"' and (i == 0 or self.lexeme[i - 1] != '\\'):
+                    escaped_lexeme += '\\"'
+                else:
+                    escaped_lexeme += self.lexeme[i]
+                i += 1
+            return f"{self.line}:{self.column} {self.token_type.name} \"{escaped_lexeme}\" \"{self.value}\""
 
         if self.token_type == TokenType.IDENTIFIER and self.value is not None:
             return f"{self.line}:{self.column} {self.token_type.name} \"{self.lexeme}\" {self.value}"
