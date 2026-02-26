@@ -27,7 +27,7 @@ MiniCompiler - это учебный проект компилятора, реа
 ### 1. Клонирование репозитория
 
 ```bash
-git clone <url-репозитория>
+git clone https://github.com/ksesha-kr/minicompiler
 cd minicompiler
 ```
 
@@ -84,9 +84,7 @@ python tests/test_runner.py --create-expected
 - `test_comments.src` - проверка комментариев
 
 **Невалидные тесты** (`tests/lexer/invalid/`):
-- `test_invalid_char.src` - недопустимые символы
-- `test_malformed_number.src` - некорректные числа
-- `test_unterminated_string.src` - незавершённые строки
+- `test_errors.src` - тест с разными ошибками 
 
 ## Формат вывода токенов
 
@@ -125,15 +123,7 @@ minicompiler/
 ├── tests/                  # Тесты
 │   ├── lexer/              # Тесты лексера
 │   │   ├── valid/          # Валидные тесты
-│   │   │   ├── test_identifiers.src
-│   │   │   ├── test_keywords.src
-│   │   │   ├── test_numbers.src
-│   │   │   ├── test_operators.src
-│   │   │   └── test_comments.src
 │   │   └── invalid/        # Невалидные тесты
-│   │       ├── test_invalid_char.src
-│   │       ├── test_malformed_number.src
-│   │       └── test_unterminated_string.src
 │   └── test_runner.py      # Запускатор тестов
 ├── examples/               # Примеры кода
 │   └── hello.src
