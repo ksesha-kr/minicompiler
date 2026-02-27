@@ -1,0 +1,4 @@
+msg1 = "hello world";
+msg2 = "line1\nline2";
+msg3 = "tab\there";
+msg4 = "quote\"test";
