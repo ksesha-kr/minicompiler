@@ -1,8 +1,0 @@
-struct Point {
-    x: int,
-    y: int
-}
-
-fn main() -> void {
-    return;
-}
