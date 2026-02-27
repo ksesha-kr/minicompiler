@@ -91,43 +91,7 @@ class TestRunner:
                 break
 
 
-def create_expected_files():
-    tests_dir = Path(__file__).parent / 'lexer'
-
-    for src_file in glob.glob(str(tests_dir / 'valid' / '*.src')):
-        expected_file = src_file.replace('.src', '.expected')
-
-        with open(src_file, 'r', encoding='utf-8') as f:
-            source = f.read()
-
-        scanner = Scanner(source)
-
-        with open(expected_file, 'w', encoding='utf-8') as f:
-            for token in scanner.tokens:
-                f.write(str(token) + '\n')
-
-        print(f"Создан: {expected_file}")
-
-    for src_file in glob.glob(str(tests_dir / 'invalid' / '*.src')):
-        expected_file = src_file.replace('.src', '.expected')
-
-        with open(src_file, 'r', encoding='utf-8') as f:
-            source = f.read()
-
-        scanner = Scanner(source)
-
-        with open(expected_file, 'w', encoding='utf-8') as f:
-            for token in scanner.tokens:
-                f.write(str(token) + '\n')
-
-        print(f"Создан: {expected_file}")
-
-
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == '--create-expected':
-        create_expected_files()
-        return
-
     tests_dir = os.path.join(os.path.dirname(__file__), 'lexer')
     runner = TestRunner(tests_dir)
     success = runner.run_all_tests()
