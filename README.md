@@ -27,7 +27,7 @@ MiniCompiler - это учебный проект компилятора, реа
 ### 1. Клонирование репозитория
 
 ```bash
-git clone https://github.com/ksesha-kr/minicompiler
+git clone <url-репозитория>
 cd minicompiler
 ```
 
@@ -72,6 +72,22 @@ python tests/test_runner.py
 python tests/test_runner.py --create-expected
 ```
 
+### Ожидаемая структура тестов
+
+Проект включает следующие тесты:
+
+**Валидные тесты** (`tests/lexer/valid/`):
+- `test_identifiers.src` - проверка идентификаторов
+- `test_keywords.src` - проверка ключевых слов
+- `test_numbers.src` - проверка числовых литералов
+- `test_operators.src` - проверка операторов
+- `test_comments.src` - проверка комментариев
+
+**Невалидные тесты** (`tests/lexer/invalid/`):
+- `test_invalid_char.src` - недопустимые символы
+- `test_malformed_number.src` - некорректные числа
+- `test_unterminated_string.src` - незавершённые строки
+
 ## Формат вывода токенов
 
 Каждый токен выводится в формате:
@@ -95,31 +111,6 @@ python tests/test_runner.py --create-expected
 3:1 ERROR "@" Недопустимый символ '@'
 ```
 
-## Структура проекта
-
-```
-minicompiler/
-├── src/                    # Исходный код
-│   ├── lexer/              # Лексический анализатор
-│   │   ├── __init__.py
-│   │   ├── scanner.py      # Сканер
-│   │   └── token.py        # Определения токенов
-│   └── utils/              # Вспомогательные модули
-│       └── __init__.py
-├── tests/                  # Тесты
-│   ├── lexer/              # Тесты лексера
-│   │   ├── valid/          # Валидные тесты
-│   │   └── invalid/        # Невалидные тесты
-│   └── test_runner.py      # Запускатор тестов
-├── examples/               # Примеры кода
-│   └── hello.src
-├── docs/                   # Документация
-│   └── language_spec.md    # Спецификация языка
-├── setup.py                # Установочный скрипт
-├── README.md               # Этот файл
-└── .gitignore              # Игнорируемые файлы
-```
-
 ## Команды проекта
 
 | Команда | Описание |
@@ -130,3 +121,111 @@ minicompiler/
 | `python -m src.lexer.scanner file.src` | Запуск через модуль |
 | `python tests/test_runner.py` | Запуск всех тестов |
 | `python tests/test_runner.py --create-expected` | Создание эталонных файлов |
+
+## Синтаксический анализ
+
+Парсер преобразует поток токенов в абстрактное синтаксическое дерево (AST).
+
+### Запуск парсера
+
+```bash
+# Текстовый вывод AST
+python -m src.main parse --input program.src --ast-format text
+
+# JSON вывод
+python -m src.main parse --input program.src --ast-format json
+
+# Graphviz DOT формат
+python -m src.main parse --input program.src --ast-format dot --output ast.dot
+dot -Tpng ast.dot -o ast.png  # конвертация в изображение
+```
+
+### Опции парсера
+
+| Опция | Описание |
+|-------|----------|
+| `--input, -i` | Входной файл |
+| `--output, -o` | Файл вывода |
+| `--ast-format, -f` | Формат: `text`, `json`, `dot` |
+| `--verbose, -v` | Подробный вывод |
+
+### Пример вывода (text)
+
+```
+Program [line 1]:
+  FunctionDecl: main -> void [line 1]:
+    Body:
+      Block [line 1]:
+        ExprStmt [line 2]:
+          Assignment: = [line 2]
+            Target: Identifier: x
+            Value: Literal: 42 (int)
+```
+
+### Запуск тестов парсера
+
+```bash
+python tests/test_parser_runner.py
+```
+
+## Грамматика языка
+
+### Краткая справка
+
+```ebnf
+Program      ::= { Declaration }
+Declaration  ::= FunctionDecl | StructDecl | VarDecl
+Expression   ::= Assignment (с учётом приоритета операторов)
+```
+
+Приоритет операторов (высший → низший):
+1. Унарные: `-` `!`
+2. Мультипликативные: `*` `/` `%`
+3. Аддитивные: `+` `-`
+4. Отношения: `<` `<=` `>` `>=`
+5. Равенство: `==` `!=`
+6. Логические: `&&` `\|\|`
+7. Присваивание: `=`
+
+## Структура проекта
+
+```
+minicompiler/
+├── src/
+│   ├── lexer/             
+│   │   ├── scanner.py
+│   │   └── token.py
+│   ├── parser/            
+│   │   ├── parser.py
+│   │   ├── ast.py
+│   │   ├── __init__.py
+│   │   └── grammar.txt
+│   └── main.py
+├── tests/
+│   ├── test_runner.py          
+│   ├── test_parser_runner.py    
+│   ├── lexer/
+│   └── parser/                 
+│       ├── valid/
+│       └── invalid/
+├── docs/
+│   └── grammar.md 
+│   └── language_spec.md
+├── examples/
+├── README.md
+└── pyproject.toml
+```
+
+## Быстрый старт
+
+```bash
+# 1. Лексический анализ
+python -m src.main lex --input examples/hello.src
+
+# 2. Синтаксический анализ
+python -m src.main parse --input examples/hello.src --ast-format text
+
+# 3. Запуск всех тестов
+python tests/test_runner.py          # лексер
+python tests/test_parser_runner.py   # парсер
+```
