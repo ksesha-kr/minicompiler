@@ -1,0 +1,88 @@
+# MiniCompiler Formal Grammar (EBNF Notation)
+
+# ==================== Program Structure ====================
+
+Program         ::= { Declaration }
+Declaration     ::= FunctionDecl | StructDecl | VarDecl
+
+# ==================== Declarations ====================
+
+FunctionDecl    ::= "fn" Identifier "(" [ Parameters ] ")" [ "->" Type ] Block
+StructDecl      ::= "struct" Identifier "{" { VarDecl } "}"
+VarDecl         ::= Type Identifier [ "=" Expression ] ";"
+Parameters      ::= Parameter { "," Parameter }
+Parameter       ::= Type Identifier
+
+# ==================== Types ====================
+
+Type            ::= "int" | "float" | "bool" | "void" | Identifier
+
+# ==================== Statements ====================
+
+Statement       ::= Block | IfStmt | WhileStmt | ForStmt | ReturnStmt | ExprStmt | VarDecl
+Block           ::= "{" { Statement } "}"
+IfStmt          ::= "if" "(" Expression ")" Statement [ "else" Statement ]
+WhileStmt       ::= "while" "(" Expression ")" Statement
+ForStmt         ::= "for" "(" [ ExprStmt ] ";" [ Expression ] ";" [ Expression ] ")" Statement
+ReturnStmt      ::= "return" [ Expression ] ";"
+ExprStmt        ::= Expression ";"
+
+# ==================== Expressions ====================
+# Precedence (lowest to highest):
+# 1. Assignment
+# 2. Logical OR
+# 3. Logical AND
+# 4. Equality
+# 5. Relational
+# 6. Additive
+# 7. Multiplicative
+# 8. Unary
+# 9. Primary
+
+Expression      ::= Assignment
+Assignment      ::= LogicalOr [ ("=" | "+=" | "-=" | "*=" | "/=") Assignment ]
+LogicalOr       ::= LogicalAnd { "||" LogicalAnd }
+LogicalAnd      ::= Equality { "&&" Equality }
+Equality        ::= Relational { ("==" | "!=") Relational }
+Relational      ::= Additive { ("<" | "<=" | ">" | ">=") Additive }
+Additive        ::= Multiplicative { ("+" | "-") Multiplicative }
+Multiplicative  ::= Unary { ("*" | "/" | "%") Unary }
+Unary           ::= [ "-" | "!" ] Primary
+Primary         ::= Literal | Identifier | "(" Expression ")" | Call
+Call            ::= Identifier "(" [ Arguments ] ")"
+Arguments       ::= Expression { "," Expression }
+
+# ==================== Literals ====================
+
+Literal         ::= Integer | Float | String | Boolean
+Integer         ::= digit { digit }
+Float           ::= digit { digit } "." { digit } [ digit ]
+String          ::= '"' { character } '"'
+Boolean         ::= "true" | "false"
+
+# ==================== Terminals ====================
+
+Identifier      ::= letter { letter | digit | "_" }
+digit           ::= [0-9]
+letter          ::= [a-zA-Z]
+
+# ==================== Precedence & Associativity ====================
+
+# Left-associative operators:
+#   +  -  *  /  %  &&  ||  ==  !=  <  <=  >  >=
+
+# Right-associative operators:
+#   =  +=  -=  *=  /=
+
+# Non-associative operators:
+#   (none in current grammar)
+
+# Operator Precedence Table (highest to lowest):
+# 1. Unary: - !
+# 2. Multiplicative: * / %
+# 3. Additive: + -
+# 4. Relational: < <= > >=
+# 5. Equality: == !=
+# 6. Logical AND: &&
+# 7. Logical OR: ||
+# 8. Assignment: = += -= *= /=
