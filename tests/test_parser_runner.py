@@ -1,0 +1,118 @@
+import os
+import sys
+import glob
+from pathlib import Path
+
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from src.lexer.scanner import Scanner
+from src.parser.parser import Parser
+
+
+class ParserTestRunner:
+
+    def __init__(self, tests_dir: str):
+        self.tests_dir = Path(tests_dir)
+        self.valid_dir = self.tests_dir / 'valid'
+        self.invalid_dir = self.tests_dir / 'invalid'
+
+        self.passed = 0
+        self.failed = 0
+        self.total = 0
+
+    def run_all_tests(self) -> bool:
+        print("ЗАПУСК ТЕСТОВ ПАРСЕРА")
+
+        print("\n--- ВАЛИДНЫЕ ТЕСТЫ ---")
+        test_files = sorted(glob.glob(str(self.valid_dir / '*.src')))
+        for test_file in test_files:
+            expected_file = test_file.replace('.src', '.expected')
+            if os.path.exists(expected_file):
+                self._run_test(test_file, expected_file, expect_success=True)
+            else:
+                print(f"Пропущен {test_file}: нет .expected файла")
+
+        print("\n--- НЕВАЛИДНЫЕ ТЕСТЫ ---")
+        test_files = sorted(glob.glob(str(self.invalid_dir / '*.src')))
+        for test_file in test_files:
+            expected_file = test_file.replace('.src', '.expected')
+            if os.path.exists(expected_file):
+                self._run_test(test_file, expected_file, expect_success=False)
+            else:
+                print(f"Пропущен {test_file}: нет .expected файла")
+
+        print(f"\nИТОГИ: Пройдено: {self.passed}/{self.total} | "
+              f"Провалено: {self.failed}")
+
+        return self.failed == 0
+
+    def _run_test(self, test_file: str, expected_file: str, expect_success: bool):
+        self.total += 1
+        test_name = os.path.basename(test_file)
+
+        print(f"\nТест: {test_name}")
+
+        with open(test_file, 'r', encoding='utf-8') as f:
+            source = f.read()
+
+        scanner = Scanner(source)
+
+        if scanner.has_errors():
+            print(f"Ошибки лексера:")
+            for error in scanner.errors:
+                print(f"  {error}")
+            self.failed += 1
+            return
+
+        parser = Parser(scanner.tokens)
+        ast = parser.parse()
+
+        output_lines = []
+        output_lines.append(str(ast).strip())
+
+        if parser.errors:
+            output_lines.append("\nОшибки парсера:")
+            for error in parser.errors:
+                output_lines.append(str(error))
+
+        actual_output = '\n'.join(output_lines)
+
+        with open(expected_file, 'r', encoding='utf-8') as f:
+            expected_output = f.read().strip()
+
+        if actual_output.strip() == expected_output.strip():
+            print(f"УСПЕХ")
+            self.passed += 1
+        else:
+            print(f"НЕУДАЧА: Вывод не совпадает с ожидаемым")
+            print("\n--- ОЖИДАЛОСЬ ---")
+            print(expected_output)
+            print("--- ПОЛУЧЕНО ---")
+            print(actual_output)
+
+            self._show_diff(expected_output, actual_output)
+            self.failed += 1
+
+    def _show_diff(self, expected: str, actual: str):
+        expected_lines = expected.split('\n')
+        actual_lines = actual.split('\n')
+
+        for i, (exp, act) in enumerate(zip(expected_lines, actual_lines)):
+            if exp != act:
+                print(f"\nРазличие в строке {i + 1}:")
+                print(f"  Ожидалось: '{exp}'")
+                print(f"  Получено:  '{act}'")
+                break
+
+
+def main():
+    tests_dir = Path(__file__).parent / 'parser'
+    runner = ParserTestRunner(str(tests_dir))
+    success = runner.run_all_tests()
+
+    sys.exit(0 if success else 1)
+
+
+if __name__ == '__main__':
+    main()

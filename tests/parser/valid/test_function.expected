@@ -1,0 +1,27 @@
+Program [line 1]:
+  FunctionDecl: add -> int [line 1]:
+    Parameters:
+      Param: int a [line 1]
+      Param: int b [line 1]
+    Body:
+      Block [line 3]:
+        Return [line 1]:
+          Binary: + [line 2]
+            Left:
+              Identifier: a [line 2]
+            Right:
+              Identifier: b [line 2]
+  FunctionDecl: main -> void [line 5]:
+    Parameters:
+      []
+    Body:
+      Block [line 7]:
+        ExprStmt [line 6]:
+          Assignment: = [line 6]
+            Target:
+              Identifier: result [line 6]
+            Value:
+              Call: add [line 6]
+                Arguments:
+                  Literal: 1 (int) [line 6]
+                  Literal: 2 (int) [line 6]

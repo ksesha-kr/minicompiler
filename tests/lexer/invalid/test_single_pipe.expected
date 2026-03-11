@@ -1,0 +1,5 @@
+1:1 IDENTIFIER "c"
+1:3 ERROR "|" Недопустимый символ '|'
+1:5 IDENTIFIER "d"
+1:6 SEMICOLON ";"
+2:1 END_OF_FILE ""

@@ -1,0 +1,29 @@
+Program [line 1]:
+  FunctionDecl: main -> void [line 1]:
+    Parameters:
+      []
+    Body:
+      Block [line 7]:
+        IfStmt [line 2]:
+          Condition:
+            Binary: > [line 2]
+              Left:
+                Identifier: x [line 2]
+              Right:
+                Literal: 0 (int) [line 2]
+          Then:
+            Block [line 4]:
+              ExprStmt [line 3]:
+                Assignment: = [line 3]
+                  Target:
+                    Identifier: y [line 3]
+                  Value:
+                    Literal: 1 (int) [line 3]
+          Else:
+            Block [line 6]:
+              ExprStmt [line 5]:
+                Assignment: = [line 5]
+                  Target:
+                    Identifier: y [line 5]
+                  Value:
+                    Literal: 0 (int) [line 5]
