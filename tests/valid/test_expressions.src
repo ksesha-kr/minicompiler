@@ -1,3 +1,0 @@
-result = (a + b) * (c - d);
-check = x >= 10 && y <= 20;
-index = array[i + 1];

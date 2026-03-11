@@ -1,5 +1,0 @@
-1:1 IDENTIFIER "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaeleblejbjbeljbf"
-1:256 OP_ASSIGN "="
-1:258 INT_LITERAL "1" 1
-1:259 SEMICOLON ";"
-2:1 END_OF_FILE ""
