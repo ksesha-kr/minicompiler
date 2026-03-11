@@ -1,5 +1,0 @@
-1:1 IDENTIFIER "y"
-1:3 OP_ASSIGN "="
-1:5 ERROR "12.34.56" Некорректное число: '12.34.56'
-1:13 SEMICOLON ";"
-2:1 END_OF_FILE ""
