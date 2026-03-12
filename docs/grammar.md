@@ -1,129 +1,135 @@
 # Грамматика языка MiniCompiler
 
-Этот документ содержит формальную спецификацию грамматики языка MiniCompiler
+## 1. Нотация и термины
 
-## Обзор
+### 1.1. Обозначения EBNF (ISO/IEC 14977)
 
-### Ключевые особенности
+| Символ | Значение | Пример |
+|--------|----------|--------|
+| `::=` | Определение | `Expr ::= Term` |
+| `|` | Альтернатива | `A \| B` — A или B |
+| `[ ... ]` | Необязательный элемент | `[ "+" Term ]` |
+| `{ ... }` | Повторение (0 или более) | `{ "," Expr }` |
+| `( ... )` | Группировка | `( "+" \| "-" ) Term` |
+| `"..."` | Терминал (литерал) | `"if"`, `"+"` |
+| *Идентификатор* | Нетерминал | `Expression`, `Statement` |
 
-| Характеристика | Значение |
-|----------------|----------|
-| Типизация | Статическая |
-| Синтаксис | C-подобный |
-| Парсинг | Рекурсивный спуск (LL(1)) |
-| Кодировка | UTF-8 |
+### 1.2. Термины
 
-## Лексические элементы
+- **Терминал** — лексема, возвращаемая лексером (токен)
+- **Нетерминал** — синтаксическая категория, определяемая правилами грамматики
+- **Начальный символ** — `Program`, корень дерева вывода
+- **LL(1)** — грамматика, допускающая нисходящий разбор с одним токеном lookahead
 
-### Ключевые слова
+## 2. Лексическая основа (терминалы)
+
+Терминалы соответствуют типам токенов из лексера (`src/lexer/token.py`).
+
+### 2.1. Ключевые слова (зарезервированные идентификаторы)
 
 ```
-fn          struct      if          else
-while       for         return      int
-float       bool        void        true
-false
+"fn" | "struct" | "if" | "else" | "while" | "for" | "return" |
+"int" | "float" | "bool" | "void" | "true" | "false"
 ```
 
-### Типы данных
-
-| Тип | Описание | Размер |
-|-----|----------|--------|
-| `int` | Целое число со знаком | 32 бита |
-| `float` | Число с плавающей точкой | 64 бита |
-| `bool` | Логический тип | 1 бит |
-| `void` | Отсутствие типа | - |
-
-### Операторы
-
-| Категория | Операторы |
-|-----------|-----------|
-| Арифметические | `+` `-` `*` `/` `%` |
-| Сравнения | `<` `<=` `>` `>=` `==` `!=` |
-| Логические | `&&` `\|\|` `!` |
-| Присваивания | `=` |
-| Другие | `(` `)` `{` `}` `[` `]` `;` `,` `.` `->` |
-
-### Литералы
+### 2.2. Литералы
 
 ```ebnf
-Integer     ::= digit { digit }
-Float       ::= digit { digit } "." { digit }
-String      ::= '"' { character } '"'
-Boolean     ::= "true" | "false"
-digit       ::= [0-9]
-character   ::= любой печатный символ кроме " и \
+IntegerLiteral  ::= digit { digit }
+FloatLiteral    ::= digit { digit } "." { digit } | digit "." { digit }
+StringLiteral   ::= '"' { Character } '"'
+BooleanLiteral  ::= "true" | "false"
+digit           ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+Character       ::= любой печатный символ, кроме '"' и '\'
 ```
 
-### Идентификаторы
+### 2.3. Идентификаторы
 
 ```ebnf
-Identifier  ::= letter { letter | digit | "_" }
-letter      ::= [a-zA-Z]
+Identifier ::= Letter { Letter | Digit | "_" }
+Letter     ::= "a"…"z" | "A"…"Z" | "_"
+Digit      ::= "0"…"9"
 ```
 
-**Правила:**
-- Начинается с буквы или `_`
-- Может содержать буквы, цифры и `_`
-- Регистрозависимый
-- Максимальная длина: 255 символов
+Максимальная длина — 255 символов
 
-### Комментарии
+### 2.4. Операторы и разделители
+
+```
+Арифметические:  "+" | "-" | "*" | "/" | "%"
+Сравнения:       "==" | "!=" | "<" | "<=" | ">" | ">="
+Логические:      "&&" | "||" | "!"
+Присваивание:    "="
+Разделители:     "(" | ")" | "{" | "}" | "[" | "]" | ";" | "," | "." | "->"
+```
+
+### 2.5. Комментарии (обрабатываются лексером, исключаются из потока токенов)
 
 ```ebnf
-LineComment     ::= "//" { любой символ кроме \n }
-BlockComment    ::= "/*" { любой символ } "*/"
+LineComment   ::= "//" { Character } "\n"
+BlockComment  ::= "/*" { any } "*/"
 ```
 
-## Формальная грамматика
+## 3. Контекстно-свободная грамматика (формальная спецификация)
 
-### Программа
+### 3.1. Корень программы
 
 ```ebnf
-Program         ::= { Declaration }
+Program ::= { Declaration }
 ```
 
-### Объявления
+### 3.2. Объявления верхнего уровня
 
 ```ebnf
-Declaration     ::= FunctionDecl | StructDecl | VarDecl
+Declaration ::= FunctionDeclaration | StructDeclaration | TopLevelVarDeclaration
 
-FunctionDecl    ::= "fn" Identifier "(" [ Parameters ] ")" [ "->" Type ] Block
+FunctionDeclaration ::= "fn" Identifier "(" [ ParameterList ] ")" [ "->" Type ] Block
 
-StructDecl      ::= "struct" Identifier "{" { VarDecl } "}"
+StructDeclaration ::= "struct" Identifier "{" { VarDeclaration } "}"
 
-VarDecl         ::= Type Identifier [ "=" Expression ] ";"
+TopLevelVarDeclaration ::= Type Identifier [ "=" Expression ] ";"
 
-Parameters      ::= Parameter { "," Parameter }
+ParameterList ::= Parameter { "," Parameter }
+Parameter     ::= Type Identifier
 
-Parameter       ::= Type Identifier
-
-Type            ::= "int" | "float" | "bool" | "void" | Identifier
+Type ::= "int" | "float" | "bool" | "void" | Identifier
 ```
 
-### Операторы
+### 3.3. Операторы (внутри функций/блоков)
 
 ```ebnf
-Statement       ::= Block | IfStmt | WhileStmt | ForStmt | ReturnStmt | ExprStmt | VarDecl
+Statement ::= 
+      Block
+    | IfStatement
+    | WhileStatement
+    | ForStatement
+    | ReturnStatement
+    | ExpressionStatement
+    | VarDeclaration
 
-Block           ::= "{" { Statement } "}"
+Block ::= "{" { Statement } "}"
 
-IfStmt          ::= "if" "(" Expression ")" Statement [ "else" Statement ]
+IfStatement ::= "if" "(" Expression ")" Statement [ "else" Statement ]
 
-WhileStmt       ::= "while" "(" Expression ")" Statement
+WhileStatement ::= "while" "(" Expression ")" Statement
 
-ForStmt         ::= "for" "(" [ ExprStmt ] ";" [ Expression ] ";" [ Expression ] ")" Statement
+ForStatement ::= "for" "(" [ ExpressionStatement ] ";" 
+                       [ Expression ] ";" 
+                       [ Expression ] ")" Statement
 
-ReturnStmt      ::= "return" [ Expression ] ";"
+ReturnStatement ::= "return" [ Expression ] ";"
 
-ExprStmt        ::= Expression ";"
+ExpressionStatement ::= Expression ";"
 ```
 
-### Выражения
+### 3.4. Выражения (с учётом приоритета операторов)
+
+Грамматика построена по уровням приоритета (от низшего к высшему), что обеспечивает корректный разбор без скобок.
 
 ```ebnf
 Expression      ::= Assignment
 
-Assignment      ::= LogicalOr [ "=" Assignment ]
+Assignment      ::= LogicalOr [ "=" LogicalOr ]
 
 LogicalOr       ::= LogicalAnd { "||" LogicalAnd }
 
@@ -139,149 +145,141 @@ Multiplicative  ::= Unary { ( "*" | "/" | "%" ) Unary }
 
 Unary           ::= [ "-" | "!" ] Primary
 
-Primary         ::= Literal | Identifier | "(" Expression ")" | Call
+Primary         ::= Literal
+                 | Identifier
+                 | Identifier "(" [ ArgumentList ] ")"
+                 | "(" Expression ")"
 
-Call            ::= Identifier "(" [ Arguments ] ")"
+ArgumentList    ::= Expression { "," Expression }
 
-Arguments       ::= Expression { "," Expression }
-
-Literal         ::= Integer | Float | String | Boolean
+Literal         ::= IntegerLiteral | FloatLiteral | StringLiteral | BooleanLiteral
 ```
 
-## Приоритет операторов
+### 3.5. Таблица соответствия правил и методов парсера
 
-Операторы перечислены от **высшего** приоритета к **низшему**:
+| Правило грамматики | Метод в `parser.py` |
+|-------------------|---------------------|
+| `Program` | `_parse_program()` |
+| `Declaration` | `_parse_declaration()` |
+| `FunctionDeclaration` | `_parse_function_decl()` |
+| `StructDeclaration` | `_parse_struct_decl()` |
+| `VarDeclaration` | `_parse_var_decl()` |
+| `Statement` | `_parse_statement()` |
+| `Block` | `_parse_block()` |
+| `IfStatement` | `_parse_if_stmt()` |
+| `WhileStatement` | `_parse_while_stmt()` |
+| `ForStatement` | `_parse_for_stmt()` |
+| `ReturnStatement` | `_parse_return_stmt()` |
+| `Expression` | `_parse_expression()` |
+| `Assignment` | `_parse_assignment()` |
+| `LogicalOr` | `_parse_logical_or()` |
+| `LogicalAnd` | `_parse_logical_and()` |
+| `Equality` | `_parse_equality()` |
+| `Relational` | `_parse_relational()` |
+| `Additive` | `_parse_additive()` |
+| `Multiplicative` | `_parse_multiplicative()` |
+| `Unary` | `_parse_unary()` |
+| `Primary` | `_parse_primary()` |
 
-| Уровень | Операторы | Описание |
-|---------|-----------|----------|
-| 1 | `-` `!` | Унарные (отрицание, логическое НЕ) |
-| 2 | `*` `/` `%` | Мультипликативные |
-| 3 | `+` `-` | Аддитивные |
-| 4 | `<` `<=` `>` `>=` | Отношения |
-| 5 | `==` `!=` | Равенство |
-| 6 | `&&` | Логическое И |
-| 7 | `\|\|` | Логическое ИЛИ |
-| 8 | `=` | Присваивание |
+## 4. Приоритет и ассоциативность операторов
 
-## Ассоциативность
+### 4.1. Таблица приоритета (от высшего к низшему)
 
-| Ассоциативность | Операторы |
-|-----------------|-----------|
-| **Слева направо** | `+` `-` `*` `/` `%` `&&` `\|\|` `==` `!=` `<` `<=` `>` `>=` |
-| **Справа налево** | `=` |
-| **Не ассоциативны** | `-` `!` (унарные) |
+| Уровень | Операторы | Тип | Ассоциативность |
+|---------|-----------|-----|-----------------|
+| 1 | `-` `!` | Унарные | Право-ассоциативные |
+| 2 | `*` `/` `%` | Мультипликативные | Лево-ассоциативные |
+| 3 | `+` `-` | Аддитивные | Лево-ассоциативные |
+| 4 | `<` `<=` `>` `>=` | Отношения | Неассоциативные |
+| 5 | `==` `!=` | Равенство | Неассоциативные |
+| 6 | `&&` | Логическое И | Лево-ассоциативные |
+| 7 | `\|\|` | Логическое ИЛИ | Лево-ассоциативные |
+| 8 | `=` | Присваивание | Право-ассоциативные |
 
-### Примеры ассоциативности
+### 4.2. Примеры разбора
 
 ```
-// Слева направо:
-a + b + c     ≡  (a + b) + c
-a * b / c     ≡  (a * b) / c
-a && b && c   ≡  (a && b) && c
+// Пример 1: приоритет * над +
+a + b * c
+→ Additive(Identifier(a), "+", Multiplicative(Identifier(b), "*", Identifier(c)))
 
-// Справа налево:
-a = b = c     ≡  a = (b = c)
+// Пример 2: лево-ассоциативность +
+a + b + c
+→ Additive(Additive(a, "+", b), "+", c)
 
-// Приоритет:
-a + b * c     ≡  a + (b * c)
-a && b || c   ≡  (a && b) || c
+// Пример 3: право-ассоциативность =
+a = b = c
+→ Assignment(a, "=", Assignment(b, "=", c))
+
+// Пример 4: унарные операторы
+-!x
+→ Unary("-", Unary("!", Identifier(x)))
 ```
 
-## Примеры
+## 5. Свойства грамматики
 
-### Простая программа
+### 5.1. LL(1)-совместимость
 
+Грамматика спроектирована как LL(1) для поддержки рекурсивного спуска:
+
+| Нетерминал | FIRST-множество | FOLLOW-множество | Конфликтов |
+|------------|-----------------|------------------|------------|
+| `Declaration` | {`"fn"`, `"struct"`, `"int"`, `"float"`, `"bool"`, `Identifier`} | {`$`, `"fn"`, `"struct"`, ...} | Нет |
+| `Statement` | {`"{"`, `"if"`, `"while"`, `"for"`, `"return"`, `Identifier`, `"int"`, ...} | {`"}"`, `";"`, `"else"`, `$`} | Нет |
+| `Primary` | {`Literal`, `Identifier`, `"("`} | {операторы, `")"`, `";"`, `","`} | Нет |
+
+### 5.2. Обработка неоднозначностей
+
+| Неоднозначность | Решение |
+|-----------------|---------|
+| Dangling else | `else` связывается с ближайшим `if` (реализовано в `_parse_if_stmt()`) |
+| Присваивание в выражении | Только `=` на уровне `Assignment`, не вложен в другие выражения |
+| Вызов функции vs. скобки в выражении | `Identifier "("` распознаётся как `Call` в `_parse_primary()` |
+
+## 6. Примеры вывода дерева разбора
+
+### 6.1. Программа
+
+**Исходный код:**
 ```c
 fn main() -> void {
-    x = 5;
-    y = x + 10;
+    x = 1 + 2 * 3;
 }
 ```
 
-### Функция с параметрами
+**Дерево вывода (упрощённо):**
+```
+Program
+└─ FunctionDeclaration("main", -> void)
+   └─ Block
+      └─ ExpressionStatement
+         └─ Assignment("x", =, Expression)
+            └─ Additive("+")
+               ├─ Identifier("x")
+               └─ Multiplicative("*")
+                  ├─ Literal(1)
+                  └─ Literal(2)
+               └─ Literal(3)  // * имеет приоритет над +
+```
 
+### 6.2. Условный оператор
+
+**Исходный код:**
 ```c
-fn add(a: int, b: int) -> int {
-    return a + b;
-}
-
-fn main() -> void {
-    result = add(1, 2);
+if (a > 0) {
+    b = 1;
+} else {
+    b = 0;
 }
 ```
 
-### Условный оператор
-
-```c
-fn main() -> void {
-    if (x > 0) {
-        y = 1;
-    } else {
-        y = 0;
-    }
-}
+**Дерево вывода:**
+```
+IfStatement
+├─ Condition: Relational(">", Identifier(a), Literal(0))
+├─ Then: Block
+│  └─ Assignment("b", =, Literal(1))
+└─ Else: Block
+   └─ Assignment("b", =, Literal(0))
 ```
 
-### Цикл while
-
-```c
-fn factorial(n: int) -> int {
-    result = 1;
-    while (n > 0) {
-        result = result * n;
-        n = n - 1;
-    }
-    return result;
-}
-```
-
-### Цикл for
-
-```c
-fn main() -> void {
-    for (i = 0; i < 10; i = i + 1) {
-        print(i);
-    }
-}
-```
-
-### Структура
-
-```c
-struct Point {
-    int x;
-    int y;
-}
-
-fn main() -> void {
-    p.x = 10;
-    p.y = 20;
-}
-```
-
-### Сложное выражение
-
-```c
-fn main() -> void {
-    result = (a + b) * (c - d) / 2;
-    check = x > 0 && y < 10 || z == 5;
-}
-```
-
-## Обработка ошибок
-
-### Синтаксические ошибки
-
-| Ошибка | Сообщение |
-|--------|-----------|
-| Пропущена `)` | `Ожидается ')' после выражения` |
-| Пропущена `;` | `Ожидается ';' после выражения` |
-| Пропущена `}` | `Ожидается '}' после блока` |
-| Неверный тип | `Ожидается тип` |
-
-### Восстановление после ошибок
-
-Парсер использует **panic mode recovery**:
-1. При ошибке пропускает токены
-2. Останавливается на точке синхронизации (`;`, `}`, `fn`, `struct`, etc.)
-3. Продолжает парсинг следующего объявления
