@@ -5,6 +5,7 @@ from pathlib import Path
 
 from src.lexer.scanner import Scanner
 from src.parser.parser import Parser, ParseError
+from src.semantic.analyzer import SemanticAnalyzer
 
 
 def cmd_lex(args):
@@ -137,6 +138,55 @@ def _ast_to_dot(ast) -> str:
 
     return "\n".join(lines)
 
+def cmd_check(args):
+    with open(args.input, 'r', encoding='utf-8') as f:
+        source = f.read()
+
+    scanner = Scanner(source)
+    if scanner.has_errors():
+        print("Ошибки лексера:", file=sys.stderr)
+        for error in scanner.errors:
+            print(error, file=sys.stderr)
+        return 1
+
+    parser = Parser(scanner.tokens)
+    ast = parser.parse()
+
+    if parser.errors:
+        print("Ошибки парсера:", file=sys.stderr)
+        for error in parser.errors:
+            print(error, file=sys.stderr)
+        return 1
+
+    analyzer = SemanticAnalyzer(filename=args.input)
+    success = analyzer.analyze(ast)
+
+    out = sys.stdout
+    if args.output:
+        out = open(args.output, 'w', encoding='utf-8')
+
+    if args.show_symbols:
+        print("=== Symbol Table ===", file=out)
+        print(analyzer.get_symbol_table().dump(), file=out)
+        print(file=out)
+
+    if args.show_types:
+        print("=== Decorated AST ===", file=out)
+        print(analyzer.dump_decorated_ast(ast), file=out)
+        print(file=out)
+
+    if analyzer.errors.has_errors():
+        print("=== Semantic Errors ===", file=sys.stderr)
+        print(str(analyzer.errors), file=sys.stderr)
+        if args.output:
+            out.close()
+        return 1
+
+    if args.output:
+        out.close()
+
+    return 0
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -165,12 +215,24 @@ def main():
         help='Подробный вывод'
     )
 
+    check_parser = subparsers.add_parser('check', help='Семантический анализ')
+    check_parser.add_argument('--input', '-i', required=True, help='Входной файл')
+    check_parser.add_argument('--output', '-o', help='Выходной файл')
+    check_parser.add_argument('--show-symbols', action='store_true',
+                              help='Показать таблицу символов')
+    check_parser.add_argument('--show-types', action='store_true',
+                              help='Показать AST с типовыми аннотациями')
+    check_parser.add_argument('--verbose', '-v', action='store_true',
+                              help='Подробный вывод')
+
     args = parser.parse_args()
 
     if args.command == 'lex':
         sys.exit(cmd_lex(args))
     elif args.command == 'parse':
         sys.exit(cmd_parse(args))
+    elif args.command == 'check':
+        sys.exit(cmd_check(args))
     else:
         parser.print_help()
         sys.exit(1)
