@@ -58,8 +58,6 @@ python -m src.lexer.scanner examples/hello.src
 
 ## Запуск тестов
 
-### Все тесты
-
 ```bash
 python tests/test_runner.py
 ```
@@ -139,6 +137,26 @@ python -m src.main parse --input program.src --ast-format json
 python -m src.main parse --input program.src --ast-format dot --output ast.dot
 dot -Tpng ast.dot -o ast.png  # конвертация в изображение
 ```
+## Семантический анализ
+
+Проверка типов, областей видимости и правил языка.
+
+### Запуск
+
+```bash
+# Базовая проверка
+python -m src.main check --input program.src
+
+# Показать таблицу символов
+python -m src.main check --input program.src --show-symbols
+
+# Показать AST с типовыми аннотациями
+python -m src.main check --input program.src --show-types
+
+# Сохранить вывод в файл
+python -m src.main check --input program.src --output result.txt
+
+```
 
 ### Опции парсера
 
@@ -166,6 +184,10 @@ Program [line 1]:
 
 ```bash
 python tests/test_parser_runner.py
+```
+### Запуск тестов семантики
+```
+python tests/test_semantic_runner.py
 ```
 
 ## Грамматика языка
