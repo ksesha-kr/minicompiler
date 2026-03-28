@@ -1,0 +1,29 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  foo: fn() -> void function [line 1]
+Scope: function:foo (level 1)
+Scope: block (level 2)
+Scope: function:foo (level 1)
+Scope: block (level 2)
+
+=== Decorated AST ===
+Program:
+  FunctionDecl: foo() -> void:
+    Body:
+      Block:
+  FunctionDecl: foo() -> int:
+    Body:
+      Block:
+        Return [type: int]:
+          Literal: 1 (int) [type: int]
+
+=== Semantic Errors ===
+Found 1 semantic error(s):
+
+semantic error: duplicate declaration
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/invalid/test_duplicate_function.src:4:4
+   |
+fn foo(...)
+   |
+   = note: Функция уже объявлена на строке 1
+

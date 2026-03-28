@@ -1,0 +1,21 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  main: fn() -> void function [line 1]
+Scope: function:main (level 1)
+Scope: block (level 2)
+
+=== Decorated AST ===
+Program:
+  FunctionDecl: main() -> void:
+    Body:
+      Block:
+        VarDecl: int x = Literal: hello (string) [type: string]
+
+=== Semantic Errors ===
+Found 1 semantic error(s):
+
+semantic error: type mismatch
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/invalid/test_assign_string_to_int.src:2:13
+   = expected: int
+   = found: string
+

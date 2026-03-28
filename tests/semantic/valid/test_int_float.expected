@@ -1,0 +1,26 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  main: fn() -> void function [line 1]
+Scope: function:main (level 1)
+Scope: block (level 2)
+
+=== Decorated AST ===
+Program:
+  FunctionDecl: main() -> void:
+    Body:
+      Block:
+        VarDecl: int x = Literal: 5 (int) [type: int]
+        VarDecl: float y = Literal: 3.14 (float) [type: float]
+        VarDecl: float z = Binary(+) [type: None]:
+
+=== Semantic Errors ===
+Found 2 semantic error(s):
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_int_float.src:4:15
+   = note: Проверьте имя переменной или добавьте объявление
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_int_float.src:4:19
+   = note: Проверьте имя переменной или добавьте объявление
+

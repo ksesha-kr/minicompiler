@@ -1,0 +1,64 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  main: fn() -> void function [line 1]
+Scope: function:main (level 1)
+Scope: block (level 2)
+Scope: block (level 3)
+Scope: block (level 3)
+
+=== Decorated AST ===
+Program:
+  FunctionDecl: main() -> void:
+    Body:
+      Block:
+        VarDecl: int x = Literal: 5 (int) [type: int]
+        If:
+          Condition:
+            Binary(>):
+              Left:
+                Identifier: x
+              Right:
+                Literal: 0 (int) [type: int]
+          Then:
+            Block:
+              ExprStmt:
+                Assignment: =:
+                  Target:
+                    Identifier: x
+                  Value:
+                    Binary(+):
+                      Left:
+                        Identifier: x
+                      Right:
+                        Literal: 1 (int)
+          Else:
+            Block:
+              ExprStmt:
+                Assignment: =:
+                  Target:
+                    Identifier: x
+                  Value:
+                    Binary(-):
+                      Left:
+                        Identifier: x
+                      Right:
+                        Literal: 1 (int)
+
+=== Semantic Errors ===
+Found 4 semantic error(s):
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_if_bool.src:3:9
+   = note: Проверьте имя переменной или добавьте объявление
+
+semantic error: invalid condition type
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_if_bool.src:3:11
+   = expected: bool
+   = found: unknown
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_if_bool.src:4:9
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_if_bool.src:6:9
+

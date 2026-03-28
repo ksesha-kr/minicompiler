@@ -1,0 +1,22 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  print_msg: fn() -> void function [line 1]
+  main: fn() -> void function [line 5]
+Scope: function:print_msg (level 1)
+Scope: block (level 2)
+Scope: function:main (level 1)
+Scope: block (level 2)
+
+=== Decorated AST ===
+Program:
+  FunctionDecl: print_msg() -> void:
+    Body:
+      Block:
+        Return: void
+  FunctionDecl: main() -> void:
+    Body:
+      Block:
+        ExprStmt:
+          Call: print_msg:
+            Arguments:
+

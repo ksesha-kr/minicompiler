@@ -1,0 +1,49 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  main: fn() -> void function [line 1]
+Scope: function:main (level 1)
+Scope: block (level 2)
+
+=== Decorated AST ===
+Program:
+  FunctionDecl: main() -> void:
+    Body:
+      Block:
+        VarDecl: int a = Literal: 10 (int) [type: int]
+        VarDecl: int b = Literal: 3 (int) [type: int]
+        VarDecl: float c = Literal: 2.5 (float) [type: float]
+        VarDecl: int sum = Binary(+) [type: None]:
+        VarDecl: float prod = Binary(*) [type: None]:
+        VarDecl: float div_result = Binary(/) [type: None]:
+
+=== Semantic Errors ===
+Found 7 semantic error(s):
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_arithmetic_types.src:6:15
+   = note: Проверьте имя переменной или добавьте объявление
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_arithmetic_types.src:6:19
+   = note: Проверьте имя переменной или добавьте объявление
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_arithmetic_types.src:7:18
+   = note: Проверьте имя переменной или добавьте объявление
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_arithmetic_types.src:7:22
+   = note: Проверьте имя переменной или добавьте объявление
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_arithmetic_types.src:8:25
+   = note: Проверьте имя переменной или добавьте объявление
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_arithmetic_types.src:8:29
+   = note: Проверьте имя переменной или добавьте объявление
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_arithmetic_types.src:8:34
+   = note: Проверьте имя переменной или добавьте объявление
+

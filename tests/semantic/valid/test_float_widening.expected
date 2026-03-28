@@ -1,0 +1,33 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  compute: fn(a: int, b: float) -> float function [line 1]
+  main: fn() -> void function [line 5]
+Scope: function:compute (level 1)
+  a: int parameter = init [line 1]
+  b: float parameter = init [line 1]
+Scope: block (level 2)
+Scope: function:main (level 1)
+Scope: block (level 2)
+
+=== Decorated AST ===
+Program:
+  FunctionDecl: compute(a: int, b: float) -> float:
+    Param: a: int
+    Param: b: float
+    Body:
+      Block:
+        Return [type: float]:
+          Binary(+) [type: float]:
+            Left:
+              Binary(*) [type: float]:
+                Left:
+                  Identifier: a -> a [type: int]
+                Right:
+                  Identifier: b -> b [type: float]
+            Right:
+              Literal: 1.0 (float) [type: float]
+  FunctionDecl: main() -> void:
+    Body:
+      Block:
+        VarDecl: float result = Call: compute [type: None]:
+

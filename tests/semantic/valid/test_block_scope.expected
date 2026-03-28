@@ -1,0 +1,45 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  main: fn() -> void function [line 1]
+Scope: function:main (level 1)
+Scope: block (level 2)
+Scope: block (level 3)
+
+=== Decorated AST ===
+Program:
+  FunctionDecl: main() -> void:
+    Body:
+      Block:
+        VarDecl: int x = Literal: 1 (int) [type: int]
+        Block:
+          VarDecl: int y = Literal: 2 (int) [type: int]
+          ExprStmt:
+            Assignment: =:
+              Target:
+                Identifier: x
+              Value:
+                Binary(+):
+                  Left:
+                    Identifier: x
+                  Right:
+                    Identifier: y
+        ExprStmt:
+          Assignment: =:
+            Target:
+              Identifier: x
+            Value:
+              Binary(+):
+                Left:
+                  Identifier: x
+                Right:
+                  Literal: 1 (int)
+
+=== Semantic Errors ===
+Found 2 semantic error(s):
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_block_scope.src:5:9
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/valid/test_block_scope.src:7:5
+

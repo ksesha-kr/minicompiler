@@ -1,0 +1,29 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  add: fn(a: int, b: int) -> int function [line 1]
+  main: fn() -> void function [line 5]
+Scope: function:add (level 1)
+  a: int parameter = init [line 1]
+  b: int parameter = init [line 1]
+Scope: block (level 2)
+Scope: function:main (level 1)
+Scope: block (level 2)
+
+=== Decorated AST ===
+Program:
+  FunctionDecl: add(a: int, b: int) -> int:
+    Param: a: int
+    Param: b: int
+    Body:
+      Block:
+        Return [type: int]:
+          Binary(+) [type: int]:
+            Left:
+              Identifier: a -> a [type: int]
+            Right:
+              Identifier: b -> b [type: int]
+  FunctionDecl: main() -> void:
+    Body:
+      Block:
+        VarDecl: int result = Call: add [type: None]:
+
