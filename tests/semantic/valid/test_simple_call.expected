@@ -1,0 +1,31 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  add: fn(a: int, b: int) -> int function [line 1]
+  main: fn() -> void function [line 5]
+Scope: function:add (level 1)
+  a: int parameter = init [line 1]
+  b: int parameter = init [line 1]
+Scope: block (level 2)
+Scope: function:main (level 1)
+Scope: block (level 2)
+  result: int variable = init [line 6]
+
+=== Decorated AST ===
+Program [line 1, col 1]:
+  FunctionDecl: add(a: int, b: int) -> int [line 1, col 4]:
+    Param: a: int
+    Param: b: int
+    Body:
+      Block [line 3, col 1]:
+        Return [line 1, col 29]:
+          Binary(+) [line 2, col 16]:
+            Left:
+              Identifier: a -> a [line 2, col 12]
+            Right:
+              Identifier: b -> b [line 2, col 16]
+  FunctionDecl: main() -> void [line 5, col 4]:
+    Body:
+      Block [line 7, col 1]:
+        VarDecl: int result = Call: add [type: None] [line 6, col 9]
+
+No semantic errors.

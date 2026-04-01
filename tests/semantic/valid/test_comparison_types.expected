@@ -1,0 +1,27 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  main: fn() -> void function [line 1]
+Scope: function:main (level 1)
+Scope: block (level 2)
+  x: int variable = init [line 2]
+  y: float variable = init [line 3]
+  z: bool variable = init [line 4]
+  r1: bool variable = init [line 6]
+  r2: bool variable = init [line 7]
+  r3: bool variable = init [line 8]
+  r4: bool variable = init [line 9]
+
+=== Decorated AST ===
+Program [line 1, col 1]:
+  FunctionDecl: main() -> void [line 1, col 4]:
+    Body:
+      Block [line 10, col 1]:
+        VarDecl: int x = Literal: 5 (int) [type: int] [line 2, col 9]
+        VarDecl: float y = Literal: 3.14 (float) [type: float] [line 3, col 11]
+        VarDecl: bool z = Literal: True (bool) [type: bool] [line 4, col 10]
+        VarDecl: bool r1 = Binary(==) [type: bool] [line 6, col 10]
+        VarDecl: bool r2 = Binary(>) [type: bool] [line 7, col 10]
+        VarDecl: bool r3 = Binary(<=) [type: bool] [line 8, col 10]
+        VarDecl: bool r4 = Binary(&&) [type: bool] [line 9, col 10]
+
+No semantic errors.

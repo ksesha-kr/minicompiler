@@ -1,0 +1,17 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  Point: struct {x: int, y: int} [line 1]
+  main: fn() -> void function [line 6]
+Scope: function:main (level 1)
+Scope: block (level 2)
+  p: int variable [line 7]
+
+=== Decorated AST ===
+Program [line 1, col 1]:
+  StructDecl [line 1, col 8]
+  FunctionDecl: main() -> void [line 6, col 4]:
+    Body:
+      Block [line 8, col 1]:
+        VarDecl: int p [line 7, col 9]
+
+No semantic errors.
