@@ -1,6 +1,0 @@
-fn foo() -> void {
-}
-
-fn foo() -> int {
-    return 1;
-}
