@@ -1,0 +1,12 @@
+fn max(int a, int b) -> int {
+    if (a > b) {
+        return a;
+    }
+    return b;
+}
+
+fn main() -> void {
+    x = 10;
+    y = 20;
+    result = max(x, y);
+}

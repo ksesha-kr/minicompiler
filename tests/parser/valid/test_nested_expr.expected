@@ -1,0 +1,28 @@
+Program [line 1]:
+  FunctionDecl: main -> void [line 1]:
+    Parameters:
+      []
+    Body:
+      Block [line 3]:
+        ExprStmt [line 2]:
+          Assignment: = [line 2]
+            Target:
+              Identifier: x [line 2]
+            Value:
+              Binary: / [line 2]
+                Left:
+                  Binary: * [line 2]
+                    Left:
+                      Binary: + [line 2]
+                        Left:
+                          Literal: 1 (int) [line 2]
+                        Right:
+                          Literal: 2 (int) [line 2]
+                    Right:
+                      Binary: - [line 2]
+                        Left:
+                          Literal: 3 (int) [line 2]
+                        Right:
+                          Literal: 4 (int) [line 2]
+                Right:
+                  Literal: 5 (int) [line 2]

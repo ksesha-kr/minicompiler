@@ -1,0 +1,9 @@
+fn main() -> void {
+    if (x > 0) {
+        if (y > 0) {
+            z = 1;
+        } else {
+            z = 0;
+        }
+    }
+}

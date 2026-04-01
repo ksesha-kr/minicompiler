@@ -1,0 +1,46 @@
+Program [line 1]:
+  FunctionDecl: max -> int [line 1]:
+    Parameters:
+      Param: int a [line 1]
+      Param: int b [line 1]
+    Body:
+      Block [line 6]:
+        IfStmt [line 2]:
+          Condition:
+            Binary: > [line 2]
+              Left:
+                Identifier: a [line 2]
+              Right:
+                Identifier: b [line 2]
+          Then:
+            Block [line 4]:
+              Return [line 2]:
+                Identifier: a [line 3]
+        Return [line 4]:
+          Identifier: b [line 5]
+  FunctionDecl: main -> void [line 8]:
+    Parameters:
+      []
+    Body:
+      Block [line 12]:
+        ExprStmt [line 9]:
+          Assignment: = [line 9]
+            Target:
+              Identifier: x [line 9]
+            Value:
+              Literal: 10 (int) [line 9]
+        ExprStmt [line 10]:
+          Assignment: = [line 10]
+            Target:
+              Identifier: y [line 10]
+            Value:
+              Literal: 20 (int) [line 10]
+        ExprStmt [line 11]:
+          Assignment: = [line 11]
+            Target:
+              Identifier: result [line 11]
+            Value:
+              Call: max [line 11]
+                Arguments:
+                  Identifier: x [line 11]
+                  Identifier: y [line 11]
