@@ -1,0 +1,21 @@
+=== Symbol Table ===
+Scope: global (level 0)
+  main: fn() -> void function [line 1]
+Scope: function:main (level 1)
+Scope: block (level 2)
+  y: int variable = init [line 2]
+
+=== Decorated AST ===
+Program [line 1, col 1]:
+  FunctionDecl: main() -> void [line 1, col 4]:
+    Body:
+      Block [line 3, col 1]:
+        VarDecl: int y = Binary(+) [type: None] [line 2, col 9]
+
+=== Semantic Errors ===
+Found 1 semantic error(s):
+
+semantic error: undeclared identifier
+  --> /Users/kseniakrukova/PycharmProjects/minicompiler/tests/semantic/invalid/test_undeclared_in_expr.src:2:13
+   = note: Проверьте имя переменной или добавьте объявление
+
