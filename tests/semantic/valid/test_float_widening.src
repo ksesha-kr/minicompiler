@@ -1,7 +1,0 @@
-fn compute(int a, float b) -> float {
-    return a * b + 1.0;
-}
-
-fn main() -> void {
-    float result = compute(10, 2.5);
-}

@@ -1,9 +1,0 @@
-fn main() -> void {
-    int a = 10;
-    int b = 3;
-    float c = 2.5;
-
-    int sum = a + b;
-    float prod = a * c;
-    float div_result = (a + b) / c;
-}

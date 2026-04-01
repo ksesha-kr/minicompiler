@@ -1,7 +1,0 @@
-fn print_msg() -> void {
-    return;
-}
-
-fn main() -> void {
-    print_msg();
-}
