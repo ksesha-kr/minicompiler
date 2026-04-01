@@ -1,0 +1,6 @@
+fn main() -> void {
+    x = 5;
+    if (a > b {
+        y = 10;
+    }
+}
