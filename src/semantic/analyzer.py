@@ -66,7 +66,6 @@ class SemanticAnalyzer:
                     SemanticErrorKind.DUPLICATE_DECLARATION,
                     f"Дублирующее объявление функции '{node.name}'",
                     node.line, node.column,
-                    context=f"fn {node.name}(...)",
                     suggestion=f"Функция уже объявлена на строке {existing.line}"
                 )
 
@@ -168,6 +167,18 @@ class SemanticAnalyzer:
     def _check_var_decl(self, node: VarDeclStmtNode) -> None:
         var_type = parse_type(node.var_type)
 
+        existing = self.symbol_table.lookup_local(node.name)
+        if existing is not None:
+            self.errors.error(
+                SemanticErrorKind.DUPLICATE_DECLARATION,
+                f"Дублирующее объявление переменной '{node.name}'",
+                node.line, node.column,
+                expected="unique name in scope",
+                found=node.name,
+                suggestion=f"Переменная уже объявлена на строке {existing.line}"
+            )
+            return
+
         if node.initializer:
             init_type = self._check_expression(node.initializer)
 
@@ -180,7 +191,16 @@ class SemanticAnalyzer:
                     found=str(init_type)
                 )
 
-            self.symbol_table.mark_initialized(node.name)
+        var_symbol = SymbolInfo(
+            name=node.name,
+            symbol_type=var_type,
+            kind=SymbolKind.VARIABLE,
+            line=node.line,
+            column=node.column,
+            scope_level=self.symbol_table.scope_depth,
+            is_initialized=(node.initializer is not None)
+        )
+        self.symbol_table.insert(node.name, var_symbol)
 
     def _check_statement(self, node: StatementNode) -> Optional[Type]:
 
@@ -527,60 +547,47 @@ class SemanticAnalyzer:
         lines = []
         prefix = "  " * indent
 
+        def location_str(node: ASTNode) -> str:
+            return f"[line {node.line}, col {node.column}]"
+
         def type_annotation(node: ASTNode) -> str:
             t = getattr(node, 'inferred_type', None)
             return f" [type: {t}]" if t else ""
 
-        def format_expr(expr) -> str:
-            if expr is None:
-                return "<none>"
-            if isinstance(expr, LiteralExprNode):
-                return f"Literal: {expr.value} ({expr.literal_type}){type_annotation(expr)}"
-            elif isinstance(expr, IdentifierExprNode):
-                symbol = getattr(expr, 'resolved_symbol', None)
-                sym_info = f" -> {symbol.name}" if symbol else ""
-                return f"Identifier: {expr.name}{sym_info}{type_annotation(expr)}"
-            elif isinstance(expr, BinaryExprNode):
-                return f"Binary({expr.operator}){type_annotation(expr)}"
-            elif isinstance(expr, CallExprNode):
-                return f"Call: {expr.callee}{type_annotation(expr)}"
-            else:
-                return f"<expr>{type_annotation(expr)}"
-
         if isinstance(node, ProgramNode):
-            lines.append(f"{prefix}Program{type_annotation(node)}:")
+            lines.append(f"{prefix}Program {location_str(node)}:")
             for decl in node.declarations:
                 lines.append(self.dump_decorated_ast(decl, indent + 1))
 
         elif isinstance(node, FunctionDeclNode):
             params = ", ".join(f"{p.name}: {p.param_type}" for p in node.parameters)
-            lines.append(f"{prefix}FunctionDecl: {node.name}({params}) -> {node.return_type}{type_annotation(node)}:")
+            lines.append(f"{prefix}FunctionDecl: {node.name}({params}) -> {node.return_type} {location_str(node)}:")
             for param in node.parameters:
                 lines.append(f"{prefix}  Param: {param.name}: {param.param_type}")
             lines.append(f"{prefix}  Body:")
             lines.append(self.dump_decorated_ast(node.body, indent + 2))
 
         elif isinstance(node, BlockStmtNode):
-            lines.append(f"{prefix}Block{type_annotation(node)}:")
+            lines.append(f"{prefix}Block {location_str(node)}:")
             for stmt in node.statements:
                 lines.append(self.dump_decorated_ast(stmt, indent + 1))
 
         elif isinstance(node, VarDeclStmtNode):
             if node.initializer:
                 init_str = self._format_expr(node.initializer)
-                lines.append(f"{prefix}VarDecl: {node.var_type} {node.name} = {init_str}")
+                lines.append(f"{prefix}VarDecl: {node.var_type} {node.name} = {init_str} {location_str(node)}")
             else:
-                lines.append(f"{prefix}VarDecl: {node.var_type} {node.name}")
+                lines.append(f"{prefix}VarDecl: {node.var_type} {node.name} {location_str(node)}")
 
         elif isinstance(node, ReturnStmtNode):
             if node.value:
-                lines.append(f"{prefix}Return{type_annotation(node.value)}:")
+                lines.append(f"{prefix}Return {location_str(node)}:")
                 lines.append(self.dump_decorated_ast(node.value, indent + 1))
             else:
-                lines.append(f"{prefix}Return: void")
+                lines.append(f"{prefix}Return: void {location_str(node)}")
 
         elif isinstance(node, IfStmtNode):
-            lines.append(f"{prefix}If{type_annotation(node.condition)}:")
+            lines.append(f"{prefix}If {location_str(node)}:")
             lines.append(f"{prefix}  Condition:")
             lines.append(self.dump_decorated_ast(node.condition, indent + 2))
             lines.append(f"{prefix}  Then:")
@@ -590,53 +597,53 @@ class SemanticAnalyzer:
                 lines.append(self.dump_decorated_ast(node.else_branch, indent + 2))
 
         elif isinstance(node, WhileStmtNode):
-            lines.append(f"{prefix}While{type_annotation(node.condition)}:")
+            lines.append(f"{prefix}While {location_str(node)}:")
             lines.append(f"{prefix}  Condition:")
             lines.append(self.dump_decorated_ast(node.condition, indent + 2))
             lines.append(f"{prefix}  Body:")
             lines.append(self.dump_decorated_ast(node.body, indent + 2))
 
         elif isinstance(node, ExprStmtNode):
-            lines.append(f"{prefix}ExprStmt{type_annotation(node.expression)}:")
+            lines.append(f"{prefix}ExprStmt {location_str(node)}:")
             if node.expression:
                 lines.append(self.dump_decorated_ast(node.expression, indent + 1))
 
         elif isinstance(node, AssignmentExprNode):
-            lines.append(f"{prefix}Assignment: {node.operator}{type_annotation(node)}:")
+            lines.append(f"{prefix}Assignment: {node.operator} {location_str(node)}:")
             lines.append(f"{prefix}  Target:")
             lines.append(self.dump_decorated_ast(node.target, indent + 2))
             lines.append(f"{prefix}  Value:")
             lines.append(self.dump_decorated_ast(node.value, indent + 2))
 
         elif isinstance(node, BinaryExprNode):
-            lines.append(f"{prefix}Binary({node.operator}){type_annotation(node)}:")
+            lines.append(f"{prefix}Binary({node.operator}) {location_str(node)}:")
             lines.append(f"{prefix}  Left:")
             lines.append(self.dump_decorated_ast(node.left, indent + 2))
             lines.append(f"{prefix}  Right:")
             lines.append(self.dump_decorated_ast(node.right, indent + 2))
 
         elif isinstance(node, UnaryExprNode):
-            lines.append(f"{prefix}Unary({node.operator}){type_annotation(node)}:")
+            lines.append(f"{prefix}Unary({node.operator}) {location_str(node)}:")
             lines.append(f"{prefix}  Operand:")
             lines.append(self.dump_decorated_ast(node.operand, indent + 2))
 
         elif isinstance(node, LiteralExprNode):
-            lines.append(f"{prefix}Literal: {node.value} ({node.literal_type}){type_annotation(node)}")
+            lines.append(f"{prefix}Literal: {node.value} ({node.literal_type}) {location_str(node)}")
 
         elif isinstance(node, IdentifierExprNode):
             symbol = getattr(node, 'resolved_symbol', None)
             sym_info = f" -> {symbol.name}" if symbol else ""
-            lines.append(f"{prefix}Identifier: {node.name}{sym_info}{type_annotation(node)}")
+            lines.append(f"{prefix}Identifier: {node.name}{sym_info} {location_str(node)}")
 
         elif isinstance(node, CallExprNode):
-            lines.append(f"{prefix}Call: {node.callee}{type_annotation(node)}:")
+            lines.append(f"{prefix}Call: {node.callee} {location_str(node)}:")
             lines.append(f"{prefix}  Arguments:")
             for arg in node.arguments:
                 lines.append(self.dump_decorated_ast(arg, indent + 2))
 
         else:
             node_type = type(node).__name__.replace('Node', '')
-            lines.append(f"{prefix}{node_type}{type_annotation(node)}")
+            lines.append(f"{prefix}{node_type} {location_str(node)}")
 
         return "\n".join(lines)
 
@@ -650,8 +657,8 @@ class SemanticAnalyzer:
             sym_info = f" -> {symbol.name}" if symbol else ""
             return f"Identifier: {expr.name}{sym_info} [type: {getattr(expr, 'inferred_type', 'unknown')}]"
         elif isinstance(expr, BinaryExprNode):
-            return f"Binary({expr.operator}) [type: {getattr(expr, 'inferred_type', 'unknown')}]:"
+            return f"Binary({expr.operator}) [type: {getattr(expr, 'inferred_type', 'unknown')}]"
         elif isinstance(expr, CallExprNode):
-            return f"Call: {expr.callee} [type: {getattr(expr, 'inferred_type', 'unknown')}]:"
+            return f"Call: {expr.callee} [type: {getattr(expr, 'inferred_type', 'unknown')}]"
         else:
             return f"<expr> [type: {getattr(expr, 'inferred_type', 'unknown')}]"
