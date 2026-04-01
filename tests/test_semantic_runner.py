@@ -12,6 +12,7 @@ from src.semantic.analyzer import SemanticAnalyzer
 
 
 class SemanticTestRunner:
+
     def __init__(self, tests_dir: str):
         self.tests_dir = Path(tests_dir)
         self.valid_dir = self.tests_dir / 'valid'
@@ -25,6 +26,9 @@ class SemanticTestRunner:
 
         print("\n--- ВАЛИДНЫЕ ТЕСТЫ ---")
         valid_files = sorted(glob.glob(str(self.valid_dir / '*.src')))
+        if not valid_files:
+            print("Тесты не найдены в valid/")
+
         for src_file in valid_files:
             expected_file = src_file.replace('.src', '.expected')
             if os.path.exists(expected_file):
@@ -34,6 +38,9 @@ class SemanticTestRunner:
 
         print("\n--- НЕВАЛИДНЫЕ ТЕСТЫ ---")
         invalid_files = sorted(glob.glob(str(self.invalid_dir / '*.src')))
+        if not invalid_files:
+            print("Тесты не найдены в invalid/")
+
         for src_file in invalid_files:
             expected_file = src_file.replace('.src', '.expected')
             if os.path.exists(expected_file):
@@ -48,79 +55,115 @@ class SemanticTestRunner:
     def _run_test(self, src_file: str, expected_file: str, expect_success: bool):
         self.total += 1
         test_name = os.path.basename(src_file)
-        print(f"\nТест: {test_name}")
+        print(f"\n Тест: {test_name}")
 
-        with open(src_file, 'r', encoding='utf-8') as f:
-            source = f.read()
+        try:
+            with open(src_file, 'r', encoding='utf-8') as f:
+                source = f.read()
 
-        scanner = Scanner(source)
-        if scanner.has_errors():
-            print(f"Ошибки лексера:")
-            for error in scanner.errors:
-                print(f"   {error}")
-            self.failed += 1
-            return
+            scanner = Scanner(source)
+            if scanner.has_errors():
+                print(f"Ошибки лексера:")
+                for error in scanner.errors:
+                    print(f"   {error}")
+                self.failed += 1
+                return
 
-        parser = Parser(scanner.tokens)
-        ast = parser.parse()
-        if parser.errors:
-            print(f"Ошибки парсера:")
-            for error in parser.errors:
-                print(f"   {error}")
-            self.failed += 1
-            return
+            parser = Parser(scanner.tokens)
+            ast = parser.parse()
+            if parser.errors:
+                output_lines = []
+                output_lines.append(str(ast).strip())
+                output_lines.append("")
+                output_lines.append("Ошибки парсера:")
+                for error in parser.errors:
+                    output_lines.append(str(error))
 
-        analyzer = SemanticAnalyzer(filename=src_file)
-        analyzer.analyze(ast)
+                actual_output = '\n'.join(output_lines)
 
-        output_lines = []
+                with open(expected_file, 'r', encoding='utf-8') as f:
+                    expected_output = f.read()
 
-        if analyzer.get_symbol_table().scope_depth >= 0:
+                actual_normalized = actual_output.rstrip()
+                expected_normalized = expected_output.rstrip()
+
+                if actual_normalized == expected_normalized:
+                    print("УСПЕХ")
+                    self.passed += 1
+                else:
+                    print("НЕУДАЧА: Вывод не совпадает с ожидаемым")
+                    self._show_diff(expected_output, actual_output)
+                    self.failed += 1
+                return
+
+            analyzer = SemanticAnalyzer(filename=src_file)
+            analyzer.analyze(ast)
+
+            output_lines = []
+
             output_lines.append("=== Symbol Table ===")
             output_lines.append(analyzer.get_symbol_table().dump())
             output_lines.append("")
 
-        output_lines.append("=== Decorated AST ===")
-        output_lines.append(analyzer.dump_decorated_ast(ast))
-        output_lines.append("")
+            output_lines.append("=== Decorated AST ===")
+            output_lines.append(analyzer.dump_decorated_ast(ast))
+            output_lines.append("")
 
-        if analyzer.errors.has_errors():
-            output_lines.append("=== Semantic Errors ===")
-            output_lines.append(str(analyzer.errors))
+            if analyzer.errors.has_errors():
+                output_lines.append("=== Semantic Errors ===")
+                output_lines.append(str(analyzer.errors))
+            else:
+                output_lines.append("No semantic errors.")
 
-        actual_output = '\n'.join(output_lines).strip()
+            actual_output = '\n'.join(output_lines)
 
-        with open(expected_file, 'r', encoding='utf-8') as f:
-            expected_output = f.read().strip()
+            with open(expected_file, 'r', encoding='utf-8') as f:
+                expected_output = f.read()
 
-        if actual_output == expected_output:
-            print("УСПЕХ")
-            self.passed += 1
-        else:
-            print("НЕУДАЧА: Вывод не совпадает с ожидаемым")
-            print("\n--- ОЖИДАЛОСЬ ---")
-            print(expected_output[:800] + ("..." if len(expected_output) > 800 else ""))
-            print("\n--- ПОЛУЧЕНО ---")
-            print(actual_output[:800] + ("..." if len(actual_output) > 800 else ""))
+            actual_normalized = actual_output.rstrip()
+            expected_normalized = expected_output.rstrip()
 
-            self._show_diff(expected_output, actual_output)
+            if actual_normalized == expected_normalized:
+                print("УСПЕХ")
+                self.passed += 1
+            else:
+                print("НЕУДАЧА: Вывод не совпадает с ожидаемым")
+                print("\n--- ОЖИДАЛОСЬ ---")
+                print(expected_output[:800] + ("..." if len(expected_output) > 800 else ""))
+                print("\n--- ПОЛУЧЕНО ---")
+                print(actual_output[:800] + ("..." if len(actual_output) > 800 else ""))
+
+                self._show_diff(expected_output, actual_output)
+                self.failed += 1
+
+        except Exception as e:
+            print(f"Ошибка выполнения: {e}")
+            import traceback
+            traceback.print_exc()
             self.failed += 1
 
     def _show_diff(self, expected: str, actual: str):
         expected_lines = expected.split('\n')
         actual_lines = actual.split('\n')
 
+        print(f"\nСтатистика:")
+        print(f"   Ожидалось строк: {len(expected_lines)}")
+        print(f"   Получено строк:  {len(actual_lines)}")
+        print(f"   Разница: {len(expected_lines) - len(actual_lines)}")
+
         for i, (exp, act) in enumerate(zip(expected_lines, actual_lines)):
             if exp != act:
                 print(f"\nРазличие в строке {i + 1}:")
                 print(f"   Ожидалось: '{exp}'")
                 print(f"   Получено:  '{act}'")
+                print(f"   Ожидалось (repr): {repr(exp)}")
+                print(f"   Получено (repr):  {repr(act)}")
                 break
         else:
             if len(expected_lines) != len(actual_lines):
-                print(f"\nРазличие в количестве строк:")
-                print(f"   Ожидалось: {len(expected_lines)} строк")
-                print(f"   Получено:  {len(actual_lines)} строк")
+                print(f"\nРазница в количестве строк:")
+                print(f"   Лишние строки в expected: {expected_lines[len(actual_lines):]}")
+                print(f"   Лишние строки в actual: {actual_lines[len(expected_lines):]}")
 
 
 def main():
