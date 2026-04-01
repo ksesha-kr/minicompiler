@@ -98,7 +98,7 @@ def _ast_to_dot(ast) -> str:
         if hasattr(node, 'return_type'):
             label += f"\\n-> {node.return_type}"
 
-        label += f"\\n[line {node.line}]"
+        label += f"\\n[line {node.line}, col {node.column}]"
 
         color = "white"
         if node_type.endswith("ExprNode") or node_type.endswith("Expr"):
