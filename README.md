@@ -62,14 +62,6 @@ python -m src.lexer.scanner examples/hello.src
 python tests/test_runner.py
 ```
 
-### Создание эталонных файлов
-
-Если нужно обновить ожидаемые результаты тестов:
-
-```bash
-python tests/test_runner.py --create-expected
-```
-
 ### Ожидаемая структура тестов
 
 Проект включает следующие тесты:
