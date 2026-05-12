@@ -6,6 +6,8 @@ from pathlib import Path
 from src.lexer.scanner import Scanner
 from src.parser.parser import Parser, ParseError
 from src.semantic.analyzer import SemanticAnalyzer
+from src.ir.generator import IRGenerator
+from src.ir.output import IROutput
 
 
 def cmd_lex(args):
@@ -187,6 +189,56 @@ def cmd_check(args):
 
     return 0
 
+def cmd_ir(args):
+    with open(args.input, 'r', encoding='utf-8') as f:
+        source = f.read()
+
+    scanner = Scanner(source)
+    if scanner.has_errors():
+        print("Ошибки лексера:", file=sys.stderr)
+        for error in scanner.errors:
+            print(error, file=sys.stderr)
+        return 1
+
+    parser = Parser(scanner.tokens)
+    ast = parser.parse()
+    if parser.errors:
+        print("Ошибки парсера:", file=sys.stderr)
+        for error in parser.errors:
+            print(error, file=sys.stderr)
+        return 1
+
+    from src.semantic.analyzer import SemanticAnalyzer
+    analyzer = SemanticAnalyzer(filename=args.input)
+    if not analyzer.analyze(ast):
+        print("Семантические ошибки:", file=sys.stderr)
+        print(str(analyzer.errors), file=sys.stderr)
+        return 1
+
+    generator = IRGenerator(analyzer.get_symbol_table())
+    ir = generator.generate(ast)
+
+    if args.format == 'text':
+        output = IROutput.to_text(ir, source_file=args.input)
+    elif args.format == 'json':
+        output = IROutput.to_json(ir)
+    elif args.format == 'dot':
+        output = IROutput.to_dot(ir, function_name=args.function)
+    else:
+        output = IROutput.to_text(ir, source_file=args.input)
+
+    if args.output:
+        with open(args.output, 'w', encoding='utf-8') as f:
+            f.write(output)
+            f.write('\n')
+    else:
+        print(output)
+
+    if args.stats:
+        print("\n" + IROutput.get_statistics(ir), file=sys.stderr)
+
+    return 0
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -225,6 +277,30 @@ def main():
     check_parser.add_argument('--verbose', '-v', action='store_true',
                               help='Подробный вывод')
 
+    ir_parser = subparsers.add_parser('ir', help='Генерация промежуточного представления (IR)')
+    ir_parser.add_argument('--input', '-i', required=True, help='Входной файл')
+    ir_parser.add_argument('--output', '-o', help='Выходной файл')
+    ir_parser.add_argument(
+        '--format', '-f',
+        choices=['text', 'json', 'dot'],
+        default='text',
+        help='Формат вывода: text, json, dot'
+    )
+    ir_parser.add_argument(
+        '--function',
+        help='Имя функции для вывода (только для dot-формата)'
+    )
+    ir_parser.add_argument(
+        '--stats', '-s',
+        action='store_true',
+        help='Показать статистику генерации'
+    )
+    ir_parser.add_argument(
+        '--optimize',
+        action='store_true',
+        help='Применить оптимизации (Sprint 4 stretch)'
+    )
+
     args = parser.parse_args()
 
     if args.command == 'lex':
@@ -233,6 +309,8 @@ def main():
         sys.exit(cmd_parse(args))
     elif args.command == 'check':
         sys.exit(cmd_check(args))
+    elif args.command == 'ir':
+        sys.exit(cmd_ir(args))
     else:
         parser.print_help()
         sys.exit(1)
