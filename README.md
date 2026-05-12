@@ -172,6 +172,43 @@ Program [line 1]:
             Value: Literal: 42 (int)
 ```
 
+## Intermediate Representation (IR)
+
+Генерация платформенно-независимого трёхадресного кода с явным графом управления потоком (CFG).
+
+### Команды CLI
+
+```bash
+# Базовая генерация IR (текстовый формат)
+python -m src.main ir --input program.src
+
+# Сохранить в файл
+python -m src.main ir --input program.src --output program.ir
+
+# JSON вывод (для инструментов анализа)
+python -m src.main ir --input program.src --format json --output program.json
+
+# Визуализация CFG (Graphviz DOT)
+python -m src.main ir --input program.src --format dot --output cfg.dot
+dot -Tpng cfg.dot -o cfg.png
+
+# Показать статистику генерации
+python -m src.main ir --input program.src --stats
+
+# Фильтрация по функции (для DOT)
+python -m src.main ir --input program.src --format dot --function main --output main_cfg.dot
+```
+
+### Опции команды ir
+| Флаг | Краткий | Описание |
+|------|---------|----------|
+| `--input` | `-i` | Входной `.src` файл (обязательно) |
+| `--output` | `-o` | Файл для записи результата |
+| `--format` | `-f` | `text` (по умолчанию), `json`, `dot` |
+| `--function` | | Имя функции для изоляции в DOT-графе |
+| `--stats` | `-s` | Вывести статистику инструкций, блоков и темпоралов |
+| `--optimize` | | Применить базовые оптимизации (Stretch Goal) |
+
 ### Запуск тестов парсера
 
 ```bash
@@ -180,6 +217,11 @@ python tests/test_parser_runner.py
 ### Запуск тестов семантики
 ```
 python tests/test_semantic_runner.py
+```
+
+### Запуск IR-тестов
+```
+python tests/test_ir_runner.py
 ```
 
 ## Грамматика языка
