@@ -1,0 +1,7 @@
+function main: void ()
+  entry:
+    t1 = ALLOCA 4:int
+    t2 = MUL 3, 4 # *
+    t3 = ADD 2, t2 # +
+    STORE [t1], t3 # x = ...
+    RETURN

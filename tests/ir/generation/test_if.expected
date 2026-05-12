@@ -1,0 +1,16 @@
+function main: void ()
+  entry:
+    t1 = ALLOCA 4:int
+    t2 = ALLOCA 4:int
+    STORE [t1], 10 # x = ...
+    STORE [t2], 0 # y = ...
+    t3 = LOAD [t1] # load x
+    t4 = CMP_> t3, 0 # >
+    JUMP_IF_NOT t4, L_else2
+  L_then1:
+    STORE [t2], 1 # y = ...
+    JUMP L_endif3
+  L_else2:
+    STORE [t2], 2 # y = ...
+    JUMP L_endif3
+  L_endif3:
