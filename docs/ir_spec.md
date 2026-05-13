@@ -1,114 +1,171 @@
-# MiniCompiler Intermediate Representation (IR) Specification
+# Спецификация промежуточного представления (IR) MiniCompiler
 
-**Version:** 1.0  
-**Status:** Stable (Sprint 4)  
-**Target:** Platform-independent Three-Address Code
+## 1. Обзор
 
----
+Промежуточное представление (IR) компилятора MiniCompiler — это платформенно-независимая форма трёхадресного кода, предназначенная для моста между декорированным абстрактным синтаксическим деревом (AST) и генерацией машинного кода. IR спроектирован с учётом последующих оптимизаций и поддерживает явный граф управления потоком (CFG).
 
-## 1. Overview
+### Ключевые принципы проектирования
+- **Трёхадресный формат:** Каждая вычислительная инструкция оперирует не более чем тремя операндами (`dest = src1 OP src2`).
+- **Явный поток управления:** Отсутствие неявных переходов. Все ветвления оформлены явными инструкциями `JUMP`.
+- **Виртуальные регистры:** Промежуточные значения хранятся в бесконечном наборе временных переменных (`t1`, `t2`, …), что упрощает последующее распределение по физическим регистрам.
+- **Детерминированность:** Порядок базовых блоков и инструкций стабилен между запусками, что критично для воспроизводимых тестов и отладки.
+- **SSA-готовность:** Архитектура заложена с учётом будущего преобразования в форму единственного присваивания (SSA).
 
-The MiniCompiler IR is a typed, three-address code representation designed to bridge the gap between the decorated Abstract Syntax Tree (AST) and target code generation. It is structured around **Basic Blocks** and a **Control Flow Graph (CFG)**, making it suitable for optimization passes and backend lowering.
+## 2. Основные концепции
 
-### Design Principles
-- **Three-Address Code:** Every computation instruction produces at most one result.
-- **Explicit Control Flow:** No implicit fall-through between unrelated blocks; all branches are explicit `JUMP` instructions.
-- **SSA-Ready:** Uses virtual registers (`t1`, `t2`, ...) for intermediate values, facilitating future SSA transformation.
-- **Deterministic:** Block ordering and instruction layout are stable across runs for reproducible testing.
+### 2.1. Операнды
+| Тип | Синтаксис | Описание |
+|-----|-----------|----------|
+| **Временная переменная** | `tN` | Виртуальный регистр для промежуточных вычислений (`t1`, `t2`, …) |
+| **Именованная переменная** | `name` | Переменная исходного языка или параметр функции |
+| **Литерал** | `42`, `3.14`, `true`, `"str"` | Константное значение с выведенным типом |
+| **Метка блока** | `L_name` | Идентификатор базового блока (например, `L_while_header1`) |
+| **Ячейка памяти** | `[base]` или `[base+offset]` | Разыменованный адрес для операций `LOAD`/`STORE` |
 
----
+### 2.2. Базовые блоки
+Базовый блок — это линейная последовательность инструкций, удовлетворяющая двум условиям:
+1. **Одна точка входа:** Блок начинается с метки (`LABEL`).
+2. **Одна точка выхода:** Блок завершается ровно одной терминирующей инструкцией (`JUMP`, `JUMP_IF`, `JUMP_IF_NOT` или `RETURN`).
 
-## 2. Core Concepts
+### 2.3. Граф управления потоком (CFG)
+- Узлы графа — базовые блоки.
+- Рёбра — возможные пути передачи управления.
+- Каждая функция имеет строго один блок `entry`.
+- Недостижимые блоки сохраняются в IR, но размещаются после достижимых для удобства анализа.
+- Обход блоков выполняется детерминированным DFS с лексикографической сортировкой преемников.
 
-### 2.1 Operands
-| Type | Syntax | Description |
-|------|--------|-------------|
-| Temporary | `tN` | Virtual register for intermediate results (`t1`, `t2`, ...) |
-| Variable | `name` | Source-level named variable or parameter |
-| Literal | `42`, `3.14`, `true`, `"str"` | Constant value with inferred type |
-| Label | `L_name` | Identifier for a Basic Block |
-| Memory | `[base]` or `[base+offset]` | Dereferenced address for load/store operations |
+## 3. Набор инструкций
 
-### 2.2 Basic Blocks
-A Basic Block is a sequence of instructions with:
-- **Single entry point:** Marked by a `LABEL`.
-- **Single exit point:** Ends with a terminator (`JUMP`, `JUMP_IF`, `JUMP_IF_NOT`, or `RETURN`).
-- **Linear execution:** No internal branches or jumps.
+Все инструкции следуют формату трёхадресного кода. Вычислительные команды записывают результат в первый операнд.
 
-### 2.3 Control Flow Graph (CFG)
-- Nodes are Basic Blocks.
-- Edges represent possible control transfers.
-- Every function has an `entry` block.
-- Unreachable blocks are preserved but listed after reachable ones.
+### 3.1. Арифметика
+| Инструкция | Формат | Описание |
+|------------|--------|----------|
+| `ADD` | `tD = ADD tA, tB` | Сложение (целые/вещественные) |
+| `SUB` | `tD = SUB tA, tB` | Вычитание |
+| `MUL` | `tD = MUL tA, tB` | Умножение |
+| `DIV` | `tD = DIV tA, tB` | Деление |
+| `MOD` | `tD = MOD tA, tB` | Остаток от деления |
+| `NEG` | `tD = NEG tA` | Унарное отрицание |
 
----
+### 3.2. Сравнения
+| Инструкция | Формат | Описание |
+|------------|--------|----------|
+| `CMP_EQ` | `tD = CMP_EQ tA, tB` | Равно |
+| `CMP_NE` | `tD = CMP_NE tA, tB` | Не равно |
+| `CMP_LT` | `tD = CMP_LT tA, tB` | Меньше |
+| `CMP_LE` | `tD = CMP_LE tA, tB` | Меньше или равно |
+| `CMP_GT` | `tD = CMP_GT tA, tB` | Больше |
+| `CMP_GE` | `tD = CMP_GE tA, tB` | Больше или равно |
 
-## 3. Instruction Set
+*Примечание: Все инструкции сравнения возвращают булево значение (`true`/`false`), записываемое в `tD`.*
 
-Instructions are categorized by operation type. All computation instructions follow the `dest = OP src1, src2` pattern.
+### 3.3. Логические операции
+| Инструкция | Формат | Описание |
+|------------|--------|----------|
+| `AND` | `tD = AND tA, tB` | Логическое И |
+| `OR`  | `tD = OR tA, tB`  | Логическое ИЛИ |
+| `NOT` | `tD = NOT tA`     | Логическое НЕ |
+| `XOR` | `tD = XOR tA, tB` | Исключающее ИЛИ |
 
-### 3.1 Arithmetic
-| Instruction | Format | Description |
-|-------------|--------|-------------|
-| `ADD` | `tD = ADD tA, tB` | Integer/Float addition |
-| `SUB` | `tD = SUB tA, tB` | Subtraction |
-| `MUL` | `tD = MUL tA, tB` | Multiplication |
-| `DIV` | `tD = DIV tA, tB` | Division |
-| `MOD` | `tD = MOD tA, tB` | Modulo |
-| `NEG` | `tD = NEG tA` | Unary negation |
+### 3.4. Работа с памятью
+| Инструкция | Формат | Описание |
+|------------|--------|----------|
+| `ALLOCA` | `tD = ALLOCA size` | Выделение стековой памяти (в байтах) |
+| `LOAD`   | `tD = LOAD [addr]` | Чтение значения из памяти в регистр |
+| `STORE`  | `STORE [addr], tS` | Запись значения из регистра в память |
 
-### 3.2 Comparison
-| Instruction | Format | Description |
-|-------------|--------|-------------|
-| `CMP_EQ` | `tD = CMP_EQ tA, tB` | Equal |
-| `CMP_NE` | `tD = CMP_NE tA, tB` | Not equal |
-| `CMP_LT` | `tD = CMP_LT tA, tB` | Less than |
-| `CMP_LE` | `tD = CMP_LE tA, tB` | Less or equal |
-| `CMP_GT` | `tD = CMP_GT tA, tB` | Greater than |
-| `CMP_GE` | `tD = CMP_GE tA, tB` | Greater or equal |
+### 3.5. Управление потоком
+| Инструкция | Формат | Описание |
+|------------|--------|----------|
+| `JUMP`      | `JUMP L_target` | Безусловный переход |
+| `JUMP_IF`   | `JUMP_IF tCond, L_target` | Переход, если `tCond != 0` (true) |
+| `JUMP_IF_NOT`| `JUMP_IF_NOT tCond, L_target` | Переход, если `tCond == 0` (false) |
 
-*Note: All comparison instructions produce a boolean result.*
+### 3.6. Функции
+| Инструкция | Формат | Описание |
+|------------|--------|----------|
+| `CALL`  | `tD = CALL fname(args...)` | Вызов функции с передачей аргументов |
+| `RETURN`| `RETURN [val]` | Завершение функции (значение опционально для `void`) |
+| `PARAM` | `PARAM idx, val` | Подготовка аргумента для вызова (нижний уровень) |
 
-### 3.3 Logical
-| Instruction | Format | Description |
-|-------------|--------|-------------|
-| `AND` | `tD = AND tA, tB` | Logical AND |
-| `OR`  | `tD = OR tA, tB`  | Logical OR |
-| `NOT` | `tD = NOT tA`     | Logical NOT |
-| `XOR` | `tD = XOR tA, tB` | Bitwise/Logical XOR |
+## 4. Текстовый синтаксис и правила форматирования
 
-### 3.4 Memory
-| Instruction | Format | Description |
-|-------------|--------|-------------|
-| `ALLOCA` | `tD = ALLOCA size` | Allocate stack memory (bytes) |
-| `LOAD`   | `tD = LOAD [addr]` | Read from memory |
-| `STORE`  | `STORE [addr], tS` | Write to memory |
-
-### 3.5 Control Flow
-| Instruction | Format | Description |
-|-------------|--------|-------------|
-| `JUMP`      | `JUMP L_target` | Unconditional branch |
-| `JUMP_IF`   | `JUMP_IF tCond, L_target` | Branch if `tCond != 0` |
-| `JUMP_IF_NOT`| `JUMP_IF_NOT tCond, L_target` | Branch if `tCond == 0` |
-
-### 3.6 Functions
-| Instruction | Format | Description |
-|-------------|--------|-------------|
-| `CALL`  | `tD = CALL fname(args...)` | Invoke function |
-| `RETURN`| `RETURN [val]` | Exit function (optional value) |
-| `PARAM` | `PARAM idx, val` | Pass argument (lowered from CALL) |
-
----
-
-## 4. Textual IR Syntax
-
-The IR serializer follows strict formatting rules for readability and machine parsing:
+Сериализатор IR придерживается строгих правил для удобства чтения и машинного парсинга:
 
 ```text
-function <name>: <return_type> (<param_type> <param_name>, ...)
-  <label>:
-    <4-space indent><instruction>  # <optional comment>
-    <4-space indent><instruction>
+function <имя>: <тип_возврата> (<тип> <имя_параметра>, ...)
+  <метка>:
+    <4 пробела><инструкция>  # <опциональный комментарий>
+    <4 пробела><инструкция>
     ...
-    <4-space indent><terminator>
+    <4 пробела><терминатор>
 ```
+
+**Правила:**
+1. Сигнатура функции выводится в отдельной строке.
+2. Метки выравниваются по левому краю внутри функции.
+3. Инструкции имеют отступ ровно в **4 пробела**.
+4. Комментарии начинаются с `#` и выравниваются вертикально.
+5. Блоки упорядочены детерминированно (DFS от `entry`, преемники отсортированы по имени метки).
+6. Пустые строки между функциями улучшают читаемость.
+
+## 5. Гарантии корректности и валидация
+
+Корректная IR-программа должна удовлетворять следующим инвариантам:
+
+| Свойство | Описание |
+|----------|----------|
+| **Терминатор** | Каждый базовый блок заканчивается ровно одной инструкцией управления потоком |
+| **Достижимость меток** | Все цели `JUMP` и `JUMP_IF` ссылаются на существующие метки внутри той же функции |
+| **Def-Before-Use** | Ни одна временная переменная не читается до её первого присваивания |
+| **Согласованность типов** | Арифметические и логические операции применяются только к совместимым типам операндов |
+| **Полнота возврата** | Функции с типом возврата, отличным от `void`, содержат `RETURN <значение>` на всех путях выполнения |
+| **Связность CFG** | Все достижимые блоки связаны с `entry`; недостижимые блоки изолированы и помечены |
+
+Эти свойства автоматически проверяются набором валидационных тестов (`tests/ir/validation/`).
+
+## 6. Пример трансформации (Исходный код → IR)
+
+### Исходный код (MiniCompiler)
+```c
+fn main() -> void {
+    int x = 5;
+    while (x > 0) {
+        x = x - 1;
+    }
+}
+```
+
+### Сгенерированный IR
+```text
+function main: void ()
+  entry:
+    t1 = ALLOCA 4:int
+    STORE [t1], 5 # x = ...
+    JUMP L_while_header1
+  L_while_header1:
+    t2 = LOAD [t1] # load x
+    t3 = CMP_GT t2, 0 # >
+    JUMP_IF t3, L_while_body2
+    JUMP L_while_end3
+  L_while_body2:
+    t4 = LOAD [t1] # load x
+    t5 = SUB t4, 1 # -
+    STORE [t1], t5 # x = ...
+    JUMP L_while_header1
+  L_while_end3:
+    RETURN
+```
+
+## 7. Связь с архитектурой проекта
+
+| Модуль | Файл | Роль в IR |
+|--------|------|-----------|
+| **Операнды** | `src/ir/operand.py` | Классы `TempOperand`, `VarOperand`, `LiteralOperand`, `MemoryOperand` |
+| **Инструкции** | `src/ir/instructions.py` | Классы-наследники `Instruction`, фабрики `add()`, `jump_if()`, `store()` и др. |
+| **Блоки и CFG** | `src/ir/basic_block.py` | `BasicBlock`, `ControlFlowGraph`, методы связности и детерминированного обхода |
+| **Функции** | `src/ir/function.py` | `FunctionIR`, `ProgramIR`, управление стековыми смещениями и прологом |
+| **Генератор** | `src/ir/generator.py` | Visitor-обход AST, трансляция выражений, операторов и вызовов в IR |
+| **Вывод** | `src/ir/output.py` | Сериализация в `text`, `json`, `dot`; сбор статистики |
+
