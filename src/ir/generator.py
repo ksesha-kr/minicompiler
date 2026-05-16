@@ -368,20 +368,27 @@ class IRGenerator:
 
         result = self.current_function.new_temp()
 
-        if node.operator == "-":
-            from src.ir.instructions import UnaryArithInst, InstructionType
-            self.current_block.add_instruction(
-                UnaryArithInst(result, operand, InstructionType.NEG,
-                               line=node.line, comment="-")
+        from src.ir.instructions import UnaryArithInst, UnaryLogicInst, InstructionType
+
+        if node.operator == '-':
+            inst = UnaryArithInst(
+                dest=result,
+                src=operand,
+                op=InstructionType.NEG,
+                line=node.line,
+                comment="-"
             )
-        elif node.operator == "!":
-            from src.ir.instructions import UnaryLogicInst
-            self.current_block.add_instruction(
-                UnaryLogicInst(result, operand, line=node.line, comment="!")
+        elif node.operator == '!':
+            inst = UnaryLogicInst(
+                dest=result,
+                src=operand,
+                line=node.line,
+                comment="!"
             )
         else:
             return None
 
+        self.current_block.add_instruction(inst)
         return result
 
     def _generate_call(self, node: CallExprNode) -> Optional[Operand]:
