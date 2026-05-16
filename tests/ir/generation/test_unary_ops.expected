@@ -1,0 +1,13 @@
+function main: void ()
+  entry:
+    t1 = ALLOCA 4:int
+    t2 = ALLOCA 4:bool
+    t3 = ALLOCA 4:int
+    STORE [t1], -5 # a = ...
+    t4 = NOT true # !
+    STORE [t2], t4 # b = ...
+    t5 = LOAD [t1] # load a
+    t6 = NEG t5 # -
+    t7 = ADD t6, 2 # +
+    STORE [t3], t7 # c = ...
+    RETURN

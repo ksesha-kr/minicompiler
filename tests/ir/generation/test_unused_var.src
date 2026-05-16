@@ -1,0 +1,5 @@
+fn main() -> void {
+    int unused = 10;
+    int used = 5;
+    used = used + 1;
+}

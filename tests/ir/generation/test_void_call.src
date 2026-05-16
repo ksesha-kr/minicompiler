@@ -1,0 +1,7 @@
+fn print_msg() -> void {
+
+}
+
+fn main() -> void {
+    print_msg();
+}

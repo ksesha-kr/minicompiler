@@ -1,0 +1,16 @@
+function get_val: int ()
+  entry:
+    RETURN 42
+
+function process: int (int v)
+  entry:
+    t1 = MUL v, 2 # *
+    RETURN t1
+
+function main: void ()
+  entry:
+    t1 = ALLOCA 4:int
+    t2 = CALL get_val() # call get_val
+    t3 = CALL process(t2) # call process
+    STORE [t1], t3 # res = ...
+    RETURN

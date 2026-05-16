@@ -1,0 +1,10 @@
+fn main() -> void {
+    int x = 1;
+    if (x > 0) {
+        if (x < 10) {
+            x = 5;
+        } else {
+            x = 6;
+        }
+    }
+}

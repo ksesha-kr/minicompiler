@@ -1,0 +1,5 @@
+fn main() -> void {
+    int a = -5;
+    bool b = !true;
+    int c = -a + 2;
+}

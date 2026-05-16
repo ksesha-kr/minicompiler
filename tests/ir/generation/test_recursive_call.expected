@@ -1,0 +1,19 @@
+function fact: int (int n)
+  entry:
+    t1 = CMP_<= n, 1 # <=
+    JUMP_IF_NOT t1, L_else2
+  L_then1:
+    RETURN 1
+  L_else2:
+    t2 = SUB n, 1 # -
+    t3 = CALL fact(t2) # call fact
+    t4 = MUL n, t3 # *
+    RETURN t4
+  L_endif3:
+
+function main: void ()
+  entry:
+    t1 = ALLOCA 4:int
+    t2 = CALL fact(5) # call fact
+    STORE [t1], t2 # res = ...
+    RETURN

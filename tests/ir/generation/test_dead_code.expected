@@ -1,0 +1,14 @@
+function test: int ()
+  entry:
+    t1 = ALLOCA 4:int
+    RETURN 1
+    STORE [t1], 2 # x = ...
+    t2 = LOAD [t1] # load x
+    RETURN t2
+
+function main: void ()
+  entry:
+    t1 = ALLOCA 4:int
+    t2 = CALL test() # call test
+    STORE [t1], t2 # res = ...
+    RETURN

@@ -1,0 +1,11 @@
+fn get_val() -> int {
+    return 42;
+}
+
+fn process(int v) -> int {
+    return v * 2;
+}
+
+fn main() -> void {
+    int res = process(get_val());
+}

@@ -1,0 +1,10 @@
+function main: void ()
+  entry:
+    t1 = ALLOCA 4:int
+    t2 = ALLOCA 4:int
+    STORE [t1], 10 # unused = ...
+    STORE [t2], 5 # used = ...
+    t3 = LOAD [t2] # load used
+    t4 = ADD t3, 1 # +
+    STORE [t2], t4 # used = ...
+    RETURN

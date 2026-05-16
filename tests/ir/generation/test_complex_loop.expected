@@ -1,0 +1,22 @@
+function main: void ()
+  entry:
+    t1 = ALLOCA 4:int
+    STORE [t1], 0 # i = ...
+    JUMP L_while_header1
+  L_while_header1:
+    t2 = LOAD [t1] # load i
+    t3 = CMP_< t2, 5 # <
+    JUMP_IF_NOT t3, L_while_end3
+  L_while_body2:
+    t4 = LOAD [t1] # load i
+    t5 = CMP_== t4, 3 # ==
+    JUMP_IF_NOT t5, L_endif5
+  L_then4:
+    STORE [t1], 10 # i = ...
+    JUMP L_endif5
+  L_endif5:
+    t6 = LOAD [t1] # load i
+    t7 = ADD t6, 1 # +
+    STORE [t1], t7 # i = ...
+    JUMP L_while_header1
+  L_while_end3:

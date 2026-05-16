@@ -1,0 +1,5 @@
+fn main() -> void {
+    int a1 = 1; int a2 = 2; int a3 = 3; int a4 = 4; int a5 = 5;
+    int b1 = 6; int b2 = 7; int b3 = 8; int b4 = 9; int b5 = 10;
+    int c1 = 11; int c2 = 12; int c3 = 13; int c4 = 14; int c5 = 15;
+}

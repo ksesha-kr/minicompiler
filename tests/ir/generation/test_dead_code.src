@@ -1,0 +1,9 @@
+fn test() -> int {
+    return 1;
+    int x = 2;
+    return x;
+}
+
+fn main() -> void {
+    int res = test();
+}

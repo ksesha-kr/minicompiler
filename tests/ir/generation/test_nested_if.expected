@@ -1,0 +1,20 @@
+function main: void ()
+  entry:
+    t1 = ALLOCA 4:int
+    STORE [t1], 1 # x = ...
+    t2 = LOAD [t1] # load x
+    t3 = CMP_> t2, 0 # >
+    JUMP_IF_NOT t3, L_endif2
+  L_then1:
+    t4 = LOAD [t1] # load x
+    t5 = CMP_< t4, 10 # <
+    JUMP_IF_NOT t5, L_else4
+  L_endif2:
+  L_then3:
+    STORE [t1], 5 # x = ...
+    JUMP L_endif5
+  L_else4:
+    STORE [t1], 6 # x = ...
+    JUMP L_endif5
+  L_endif5:
+    JUMP L_endif2
