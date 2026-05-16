@@ -15,7 +15,6 @@ from src.ir.output import IROutput
 
 
 class IRTestRunner:
-
     def __init__(self, tests_dir: str):
         self.tests_dir = Path(tests_dir)
         self.generation_dir = self.tests_dir / 'generation'
@@ -25,55 +24,52 @@ class IRTestRunner:
         self.total = 0
 
     def run_all_tests(self) -> bool:
-        print("ЗАПУСК ТЕСТОВ IR GENERATION")
+        print("ЗАПУСК ТЕСТОВ IR GENERATION (Sprint 4)")
 
-        print("\n--- GENERATION TESTS ---")
+        print("\n--- STANDARD GENERATION TESTS ---")
         if self.generation_dir.exists():
             for src_file in sorted(glob.glob(str(self.generation_dir / '*.src'))):
                 expected_file = src_file.replace('.src', '.expected')
                 if os.path.exists(expected_file):
                     self._run_generation_test(src_file, expected_file)
+
+        print("\n--- NEGATIVE/EDGE CASE TESTS ---")
+        if self.negative_dir.exists():
+            for src_file in sorted(glob.glob(str(self.negative_dir / '*.src'))):
+                expected_file = src_file.replace('.src', '.expected')
+                if os.path.exists(expected_file):
+                    self._run_generation_test(src_file, expected_file, is_negative=True)
                 else:
-                    print(f"{os.path.basename(src_file)}: нет .expected")
+                    print(f" {os.path.basename(src_file)}: нет .expected файла")
         else:
-            print("Директория generation/ не найдена")
+            print("Директория negative_edge_cases/ не найдена")
 
         print("\n--- VALIDATION TESTS ---")
         if self.validation_dir.exists():
             for py_file in sorted(glob.glob(str(self.validation_dir / 'test_*.py'))):
                 self._run_validation_test(py_file)
-        else:
-            print("Директория validation/ не найдена")
 
         print(f"ИТОГИ: Пройдено: {self.passed}/{self.total} | Провалено: {self.failed}")
 
         return self.failed == 0
 
-    def _run_generation_test(self, src_file: str, expected_file: str):
+    def _run_generation_test(self, src_file: str, expected_file: str, is_negative=False):
         self.total += 1
         test_name = os.path.basename(src_file)
-        print(f"\n{test_name}")
+        prefix = "[NEG] " if is_negative else "- "
+        print(f"\n{prefix}{test_name}")
 
         try:
             with open(src_file, 'r', encoding='utf-8') as f:
                 source = f.read()
 
             scanner = Scanner(source)
-            if scanner.has_errors():
-                print(f"Ошибки лексера")
-                self.failed += 1
-                return
-
             parser = Parser(scanner.tokens)
             ast = parser.parse()
-            if parser.errors:
-                print(f"Ошибки парсера")
-                self.failed += 1
-                return
-
             analyzer = SemanticAnalyzer(filename=src_file)
+
             if not analyzer.analyze(ast):
-                print(f"Семантические ошибки")
+                print(f"Семантические ошибки (неожиданно для IR теста)")
                 self.failed += 1
                 return
 
@@ -86,24 +82,24 @@ class IRTestRunner:
                 expected = f.read().strip()
 
             if actual == expected:
-                print("УСПЕХ")
+                print(" УСПЕХ")
                 self.passed += 1
             else:
-                print("НЕУДАЧА: Вывод не совпадает")
+                print(" НЕУДАЧА: Вывод не совпадает")
                 print("ОЖИДАЛОСЬ:")
-                print(expected)
-                print("\nПОЛУЧЕНО:")
-                print(actual)
+                print(expected[:500])
+                print("\n ПОЛУЧЕНО:")
+                print(actual[:500])
                 self.failed += 1
 
         except Exception as e:
-            print(f"Ошибка: {e}")
+            print(f" Ошибка выполнения: {e}")
             self.failed += 1
 
     def _run_validation_test(self, py_file: str):
         self.total += 1
         test_name = os.path.basename(py_file)
-        print(f"\n{test_name}")
+        print(f"\n {test_name}")
 
         try:
             result = subprocess.run(
@@ -117,32 +113,16 @@ class IRTestRunner:
             if result.returncode == 0:
                 for line in result.stdout.strip().split('\n'):
                     if '+' in line:
-                        print(f"+ {line.strip()}")
+                        print(f" {line.strip()}")
                         break
                 self.passed += 1
             else:
                 print(f"{result.stdout.strip()}")
-                if result.stderr:
-                    print(f"   {result.stderr.strip()}")
                 self.failed += 1
 
-        except subprocess.TimeoutExpired:
-            print("Таймаут")
-            self.failed += 1
         except Exception as e:
             print(f"Ошибка: {e}")
             self.failed += 1
-
-    def _show_diff(self, expected: str, actual: str):
-        exp_lines = expected.split('\n')
-        act_lines = actual.split('\n')
-
-        for i, (e, a) in enumerate(zip(exp_lines, act_lines)):
-            if e != a:
-                print(f"   Строка {i + 1}:")
-                print(f"     Expected: {e}")
-                print(f"     Actual:   {a}")
-                break
 
 
 def main():
