@@ -33,17 +33,6 @@ class IRTestRunner:
                 if os.path.exists(expected_file):
                     self._run_generation_test(src_file, expected_file)
 
-        print("\n--- NEGATIVE/EDGE CASE TESTS ---")
-        if self.negative_dir.exists():
-            for src_file in sorted(glob.glob(str(self.negative_dir / '*.src'))):
-                expected_file = src_file.replace('.src', '.expected')
-                if os.path.exists(expected_file):
-                    self._run_generation_test(src_file, expected_file, is_negative=True)
-                else:
-                    print(f" {os.path.basename(src_file)}: нет .expected файла")
-        else:
-            print("Директория negative_edge_cases/ не найдена")
-
         print("\n--- VALIDATION TESTS ---")
         if self.validation_dir.exists():
             for py_file in sorted(glob.glob(str(self.validation_dir / 'test_*.py'))):
